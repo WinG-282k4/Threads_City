@@ -5,7 +5,9 @@ from django.http import HttpResponse
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db.models import Q
-
+from rest_framework import viewsets, status, permissions
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from .models import (
     Thread,
@@ -22,6 +24,10 @@ from .utils import (
     create_thread_images,
     create_cmt,
     create_cmt_images,
+)
+from .serializers import (
+    ThreadSerializer, CommentSerializer, FollowSerializer,
+    NotificationSerializer, UserSerializer
 )
 
 
@@ -521,3 +527,132 @@ def check_reddot(request):
         )
     else:
         return HttpResponse("<span></span>")
+
+
+class ThreadViewSet(viewsets.ModelViewSet):
+    serializer_class = ThreadSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Thread.objects.all().order_by('-created_at')
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    @action(detail=False, methods=['get'])
+    def feed(self, request):
+        queryset = self.get_queryset()
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def following_feed(self, request):
+        following = request.user.following.all()
+        following_user_ids = [follow.followed.id for follow in following]
+        queryset = Thread.objects.filter(user__id__in=following_user_ids)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def like(self, request, pk=None):
+        thread = self.get_object()
+        like, created = Like.objects.get_or_create(thread=thread, user=request.user)
+        if not created:
+            like.delete()
+        return Response({'status': 'success'})
+
+    @action(detail=True, methods=['post'])
+    def repost(self, request, pk=None):
+        thread = self.get_object()
+        repost, created = Repost.objects.get_or_create(thread=thread, user=request.user)
+        if not created:
+            repost.delete()
+        return Response({'status': 'success'})
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        thread_id = self.kwargs.get('thread_pk')
+        return Comment.objects.filter(thread_id=thread_id).order_by('-created_at')
+
+    def perform_create(self, serializer):
+        thread_id = self.kwargs.get('thread_pk')
+        thread = get_object_or_404(Thread, id=thread_id)
+        serializer.save(user=self.request.user, thread=thread)
+
+    @action(detail=True, methods=['post'])
+    def like(self, request, thread_pk=None, pk=None):
+        comment = self.get_object()
+        like, created = LikeComment.objects.get_or_create(comment=comment, user=request.user)
+        if not created:
+            like.delete()
+        return Response({'status': 'success'})
+
+    @action(detail=True, methods=['post'])
+    def repost(self, request, thread_pk=None, pk=None):
+        comment = self.get_object()
+        repost, created = RepostComment.objects.get_or_create(comment=comment, user=request.user)
+        if not created:
+            repost.delete()
+        return Response({'status': 'success'})
+
+
+class FollowViewSet(viewsets.ModelViewSet):
+    serializer_class = FollowSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Follow.objects.filter(follower=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(follower=self.request.user)
+
+
+class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = NotificationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Notification.objects.filter(user=self.request.user).order_by('-created_at')
+
+    @action(detail=False, methods=['get'])
+    def unread_count(self, request):
+        count = Notification.objects.filter(user=request.user, is_read=False).count()
+        return Response({'count': count})
+
+    @action(detail=True, methods=['post'])
+    def mark_read(self, request, pk=None):
+        notification = self.get_object()
+        notification.is_read = True
+        notification.save()
+        return Response({'status': 'success'})
+
+
+class UserViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return User.objects.all()
+
+    @action(detail=False, methods=['get'])
+    def search(self, request):
+        query = request.query_params.get('q', '')
+        users = User.objects.filter(username__icontains=query)
+        page = self.paginate_queryset(users)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(users, many=True)
+        return Response(serializer.data)

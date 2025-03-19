@@ -1,109 +1,172 @@
-# Thread Clone
+# Thread Clone API
 
-**Thread Clone** is a social media thread clone project built using [Django](https://www.djangoproject.com/) and [HTMX](https://htmx.org/), allowing users to create and participate in threaded discussions. This README provides an overview of the project and instructions for getting started.
+## Authentication APIs
 
-## Table of Contents
+### User Authentication
 
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-- [Usage](#usage)
-- [Contributing](#contributing)
-- [License](#license)
-
-## Getting Started
-
-To get started with **Thread Clone**, follow these instructions:
-
-### Prerequisites
-
-Before you begin, ensure you have the following prerequisites installed:
-
-- Python (version 3.10.12) or higher
-
-You can install Python from the [official Python website](https://www.python.org/downloads/).
-
-### Installation
-
-1. Clone the Thread Clone repository to your local machine:
-
-```bash
-git clone https://github.com/ahnge/thread-clone.git
+```
+POST   /api/auth/users/login/           # Login
+POST   /api/auth/users/                 # Register
+GET    /api/auth/users/me/              # Get current user
+PUT    /api/auth/users/me/              # Update current user
+POST   /api/auth/users/change_password/ # Change password
 ```
 
-2. Navigate to the project directory:
+### User Management
 
-```bash
-cd thread-clone
+```
+GET    /api/auth/users/                 # List all users
+GET    /api/auth/users/{id}/            # Get user detail
+PUT    /api/auth/users/{id}/            # Update user
+DELETE /api/auth/users/{id}/            # Delete user
 ```
 
-3. Set up a virtual environment (recommended):
+## Thread APIs
 
-```bash
-python -m venv venv
+### Thread Management
+
+```
+GET    /api/threads/                    # List all threads
+POST   /api/threads/                    # Create new thread
+GET    /api/threads/{id}/               # Get thread detail
+PUT    /api/threads/{id}/               # Update thread
+DELETE /api/threads/{id}/               # Delete thread
 ```
 
-4. Activate the virtual environment:
+### Thread Feed
 
-On windows:
-
-```bash
-venv\Scripts\activate
+```
+GET    /api/threads/feed/               # Get all threads feed
+GET    /api/threads/following-feed/     # Get following users' threads feed
 ```
 
-On macOS and Linux:
+### Thread Interactions
 
-```bash
-source venv/bin/activate
+```
+POST   /api/threads/{id}/like/         # Like/unlike thread
+POST   /api/threads/{id}/repost/        # Repost/unrepost thread
 ```
 
-5. Install project dependencies:
+## Comment APIs
 
-```bash
-pip install -r requirements.txt
+### Comment Management
+
+```
+GET    /api/threads/{thread_id}/comments/           # List comments
+POST   /api/threads/{thread_id}/comments/           # Create comment
+GET    /api/threads/{thread_id}/comments/{id}/      # Get comment detail
+PUT    /api/threads/{thread_id}/comments/{id}/      # Update comment
+DELETE /api/threads/{thread_id}/comments/{id}/      # Delete comment
 ```
 
-6. Apply database migrations:
+### Comment Interactions
 
-```bash
-python manage.py migrate
+```
+POST   /api/threads/{thread_id}/comments/{id}/like/    # Like/unlike comment
+POST   /api/threads/{thread_id}/comments/{id}/repost/   # Repost/unrepost comment
 ```
 
-7. Create a superuser account for admin access:
+## Follow APIs
 
-```bash
-python manage.py createsuperuser
+### Follow Management
+
+```
+GET    /api/follows/                    # List follows
+POST   /api/follows/                    # Create follow
+DELETE /api/follows/{id}/               # Delete follow
 ```
 
-8. Start the development server:
+## Notification APIs
 
-```bash
-python manage.py runserver
+### Notification Management
+
+```
+GET    /api/notifications/              # List notifications
+GET    /api/notifications/unread-count/ # Get unread notifications count
+POST   /api/notifications/{id}/mark-read/ # Mark notification as read
 ```
 
-The Thread Clone should now be running at http://localhost:8000/. You can access the admin interface at http://localhost:8000/admin/ to manage threads and users.
+## Request/Response Examples
 
-## Usage
+### Login
 
-With **Thread Clone**, users can:
+```json
+POST /api/auth/users/login/
+{
+    "username": "user1",
+    "password": "password123"
+}
+```
 
-- Create and participate in threaded discussions.
-- Reply to existing threads and comments.
-- Like and repost threads and comments
-- Follow users
-- Manage their user profiles.
-- To see the project in action, visit the development server URL and start exploring.
+### Register
 
-## Contributing
+```json
+POST /api/auth/users/
+{
+    "username": "newuser",
+    "password": "password123",
+    "password2": "password123",
+    "email": "user@example.com",
+    "first_name": "John",
+    "last_name": "Doe"
+}
+```
 
-We welcome contributions. To contribute:
+### Create Thread
 
-- Fork the repository on GitHub.
-- Create a branch for your feature or bug fix.
-- Make your changes and commit them with descriptive messages.
-- Push your branch to your fork.
-- Open a pull request with details about your changes.
+```json
+POST /api/threads/
+{
+    "content": "Thread content here"
+}
+```
 
-## License
+### Create Comment
 
-This project is licensed under the GNU General Public License, Version 3 (GPLv3) - see the [LICENSE](LICENSE.txt) file for details.
+```json
+POST /api/threads/{thread_id}/comments/
+{
+    "content": "Comment content here"
+}
+```
+
+### Change Password
+
+```json
+POST /api/auth/users/change_password/
+{
+    "old_password": "oldpassword",
+    "new_password": "newpassword",
+    "new_password2": "newpassword"
+}
+```
+
+## Authentication
+
+- All endpoints except login and register require authentication
+- Authentication is done using Django's session authentication
+- Include credentials in requests (username/password)
+
+## Pagination
+
+- Most list endpoints support pagination
+- Default page size: 7 items per page
+- Use `?page=X` query parameter for pagination
+
+## Error Responses
+
+- 400 Bad Request: Invalid input data
+- 401 Unauthorized: Not authenticated
+- 403 Forbidden: Not authorized
+- 404 Not Found: Resource not found
+- 500 Internal Server Error: Server error
+
+## Development Setup
+
+1. Clone the repository
+2. Create virtual environment
+3. Install dependencies: `pip install -r requirements.txt`
+4. Create config.py with required settings
+5. Run migrations: `python manage.py migrate`
+6. Create superuser: `python manage.py createsuperuser`
+7. Run server: `python manage.py runserver`

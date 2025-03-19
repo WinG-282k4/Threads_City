@@ -1,7 +1,4 @@
-.venv
-db.sqlite3
-node_modules
+venv/
 __pycache__/
 media
 .env
-config.py
