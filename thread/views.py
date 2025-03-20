@@ -589,7 +589,15 @@ class CommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         thread_id = self.kwargs.get('thread_pk')
         thread = get_object_or_404(Thread, id=thread_id)
-        serializer.save(user=self.request.user, thread=thread)
+        
+        # Get parent_comment_id from request data
+        parent_comment_id = self.request.data.get('parent_comment_id')
+        parent_comment = None
+        
+        if parent_comment_id:
+            parent_comment = get_object_or_404(Comment, id=parent_comment_id, thread=thread)
+            
+        serializer.save(user=self.request.user, thread=thread, parent_comment=parent_comment)
 
     @action(detail=True, methods=['post'])
     def like(self, request, thread_pk=None, pk=None):

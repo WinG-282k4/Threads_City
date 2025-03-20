@@ -16,7 +16,7 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ['id', 'content', 'user', 'created_at', 
-                 'likes_count', 'is_liked', 'replies_count']
+                 'likes_count', 'is_liked', 'replies_count', 'parent_comment_id']
 
     def get_likes_count(self, obj):
         return obj.likecomment_set.count()
@@ -28,7 +28,7 @@ class CommentSerializer(serializers.ModelSerializer):
         return False
 
     def get_replies_count(self, obj):
-        return obj.comment_set.count()
+        return obj.sub_comment.count()
 
 class ThreadSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)

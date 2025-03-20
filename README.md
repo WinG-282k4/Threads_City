@@ -88,34 +88,91 @@
 - **Endpoint**: `POST /api/threads/{thread_id}/repost/`
 - **Authentication**: Required
 
-### 3. Comment APIs (`/api/threads/{thread_id}/comments/`)
+### 3. Comment API
 
-#### Get Thread Comments
+#### Get Comments for a Thread
 
-- **Endpoint**: `GET /api/threads/{thread_id}/comments/`
-- **Authentication**: Required
-- **Query Params**: `?page=1` (pagination)
+```http
+GET /api/threads/{thread_id}/comments/
+```
 
-#### Create Comment
+Response:
 
-- **Endpoint**: `POST /api/threads/{thread_id}/comments/`
-- **Authentication**: Required
-- **Body**:
-  ```json
+```json
+[
   {
-    "content": "Comment content here"
+    "id": 1,
+    "content": "Comment content",
+    "user": {
+      "id": 1,
+      "username": "username",
+      "first_name": "First",
+      "last_name": "Last",
+      "email": "email@example.com"
+    },
+    "created_at": "2024-03-21T10:00:00Z",
+    "likes_count": 5,
+    "is_liked": false,
+    "replies_count": 3,
+    "parent_comment_id": null
   }
-  ```
+]
+```
 
-#### Like Comment
+#### Create a Comment
 
-- **Endpoint**: `POST /api/threads/{thread_id}/comments/{comment_id}/like/`
-- **Authentication**: Required
+```http
+POST /api/threads/{thread_id}/comments/
+Content-Type: application/json
 
-#### Repost Comment
+{
+    "content": "Your comment content"
+}
+```
 
-- **Endpoint**: `POST /api/threads/{thread_id}/comments/{comment_id}/repost/`
-- **Authentication**: Required
+Response: Created comment object
+
+#### Create a Reply to a Comment
+
+```http
+POST /api/threads/{thread_id}/comments/
+Content-Type: application/json
+
+{
+    "content": "Your reply content",
+    "parent_comment_id": 1
+}
+```
+
+Response: Created reply comment object
+
+#### Like/Unlike a Comment
+
+```http
+POST /api/threads/{thread_id}/comments/{comment_id}/like/
+```
+
+Response:
+
+```json
+{
+  "status": "success"
+}
+```
+
+#### Repost/Unrepost a Comment
+
+```http
+POST /api/threads/{thread_id}/comments/{comment_id}/repost/
+```
+
+Response:
+
+```json
+{
+  "status": "success"
+}
+```
 
 ### 4. Follow APIs (`/api/follows/`)
 
