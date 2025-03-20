@@ -211,16 +211,80 @@ Response:
 - **Endpoint**: `GET /api/notifications/`
 - **Authentication**: Required
 - **Query Params**: `?page=1` (pagination)
+- **Response**:
+  ```json
+  {
+    "count": 10,
+    "next": "http://api.example.org/notifications/?page=2",
+    "previous": null,
+    "results": [
+      {
+        "id": 1,
+        "user": {
+          "id": 1,
+          "username": "username",
+          "first_name": "First",
+          "last_name": "Last",
+          "email": "email@example.com"
+        },
+        "actioner": {
+          "id": 2,
+          "username": "actioner",
+          "first_name": "Action",
+          "last_name": "User",
+          "email": "actioner@example.com"
+        },
+        "content": "liked your thread",
+        "created_at": "2024-03-21T10:00:00Z",
+        "is_read": false
+      }
+    ]
+  }
+  ```
 
 #### Get Unread Notification Count
 
 - **Endpoint**: `GET /api/notifications/unread_count/`
 - **Authentication**: Required
+- **Response**:
+  ```json
+  {
+    "count": 5
+  }
+  ```
 
 #### Mark Notification as Read
 
 - **Endpoint**: `POST /api/notifications/{notification_id}/mark_read/`
 - **Authentication**: Required
+- **Response**:
+  ```json
+  {
+    "status": "success",
+    "id": 1
+  }
+  ```
+
+#### Mark All Notifications as Read
+
+- **Endpoint**: `POST /api/notifications/mark_all_read/`
+- **Authentication**: Required
+- **Response**:
+  ```json
+  {
+    "status": "success",
+    "message": "All notifications marked as read"
+  }
+  ```
+
+#### Get Unread Notifications
+
+- **Endpoint**: `GET /api/notifications/?is_read=false`
+- **Authentication**: Required
+- **Query Params**:
+  - `is_read`: false
+  - `page`: Page number for pagination
+- **Response**: Same as Get Notifications endpoint
 
 ### Authentication & Headers
 

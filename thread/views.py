@@ -637,7 +637,14 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Notification.objects.filter(user=self.request.user).order_by('-created_at')
+        queryset = Notification.objects.filter(user=self.request.user)
+        is_read = self.request.query_params.get('is_read', None)
+        
+        if is_read is not None:
+            is_read = is_read.lower() == 'true'
+            queryset = queryset.filter(is_read=is_read)
+            
+        return queryset.order_by('-created_at')
 
     @action(detail=False, methods=['get'])
     def unread_count(self, request):
@@ -649,7 +656,18 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
         notification = self.get_object()
         notification.is_read = True
         notification.save()
-        return Response({'status': 'success'})
+        return Response({
+            'status': 'success',
+            'id': notification.id
+        })
+
+    @action(detail=False, methods=['post'])
+    def mark_all_read(self, request):
+        Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+        return Response({
+            'status': 'success',
+            'message': 'All notifications marked as read'
+        })
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
