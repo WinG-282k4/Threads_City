@@ -47,6 +47,46 @@
   }
   ```
 
+#### Search Users
+
+- **Endpoint**: `GET /api/users/?search=query`
+- **Authentication**: Required
+- **Query Params**:
+  - `search`: Search query (username, first name, or last name)
+  - `page`: Page number for pagination
+- **Response**:
+  ```json
+  {
+    "count": 5,
+    "next": "http://api.example.org/users/?search=query&page=2",
+    "previous": null,
+    "results": [
+      {
+        "id": 1,
+        "username": "username",
+        "first_name": "First",
+        "last_name": "Last",
+        "email": "email@example.com"
+      }
+    ]
+  }
+  ```
+
+#### Get User Details
+
+- **Endpoint**: `GET /api/users/{user_id}/`
+- **Authentication**: Required
+- **Response**:
+  ```json
+  {
+    "id": 1,
+    "username": "username",
+    "first_name": "First",
+    "last_name": "Last",
+    "email": "email@example.com"
+  }
+  ```
+
 ### 2. Thread APIs (`/api/threads/`)
 
 #### Get All Threads
