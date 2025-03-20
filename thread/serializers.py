@@ -16,7 +16,7 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ['id', 'content', 'user', 'created_at', 
-                 'likes_count', 'is_liked', 'replies_count', 'parent_comment_id']
+                 'likes_count', 'is_liked', 'replies_count']
 
     def get_likes_count(self, obj):
         return obj.likecomment_set.count()
@@ -65,10 +65,39 @@ class ThreadSerializer(serializers.ModelSerializer):
 class FollowSerializer(serializers.ModelSerializer):
     follower = UserSerializer(read_only=True)
     followed = UserSerializer(read_only=True)
+    followed_id = serializers.IntegerField(write_only=True)  # Thêm ID để gửi từ request
+    status = serializers.SerializerMethodField()
 
     class Meta:
         model = Follow
-        fields = ['id', 'follower', 'followed', 'created_at']
+        fields = ['id', 'follower', 'followed', 'followed_id', 'created_at', 'status']
+        read_only_fields = ['follower', 'followed']
+
+    def get_status(self, obj):
+        return "Followed successfully" if obj.id else "Unfollowed successfully"
+
+    def create(self, validated_data):
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            raise serializers.ValidationError("Authentication required.")
+
+        followed_id = validated_data.pop("followed_id", None)
+        if not followed_id:
+            raise serializers.ValidationError({"followed_id": "This field is required."})
+
+        try:
+            followed_user = User.objects.get(id=followed_id)
+            # Kiểm tra xem đã follow chưa
+            follow_obj = Follow.objects.filter(follower=request.user, followed=followed_user).first()
+            if follow_obj:
+                # Nếu đã follow thì unfollow
+                follow_obj.delete()
+                # Return a dummy instance to satisfy the serializer
+                return Follow(follower=request.user, followed=followed_user)
+            # Nếu chưa follow thì tạo mới
+            return Follow.objects.create(follower=request.user, followed=followed_user)
+        except User.DoesNotExist:
+            raise serializers.ValidationError({"followed_id": "User not found."})
 
 class NotificationSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)

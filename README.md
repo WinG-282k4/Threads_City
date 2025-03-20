@@ -189,7 +189,18 @@ Response:
 - **Body**:
   ```json
   {
-    "followed": user_id
+    "followed_id": user_id
+  }
+  ```
+
+#### Get Followers Count
+
+- **Endpoint**: `GET /api/follows/followers_count/`
+- **Authentication**: Required
+- **Response**:
+  ```json
+  {
+    "count": 123 // Số người đang follow bạn
   }
   ```
 

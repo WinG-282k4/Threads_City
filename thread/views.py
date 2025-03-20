@@ -626,6 +626,11 @@ class FollowViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(follower=self.request.user)
 
+    @action(detail=False, methods=['get'])
+    def followers_count(self, request):
+        count = Follow.objects.filter(followed=request.user).count()
+        return Response({'count': count})
+
 
 class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = NotificationSerializer
