@@ -8,11 +8,11 @@ from django.db.models import Q
 from django.contrib import messages
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.http.response import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 from itertools import chain
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
-
 
 from thread.models import Comment, Thread, RepostComment, Follow
 from .utils import check_following
@@ -358,6 +358,10 @@ class UserViewSet(viewsets.ModelViewSet):
             return [permissions.AllowAny()]
         return super().get_permissions()
 
+    @csrf_exempt
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
     @action(detail=False, methods=['get'])
     def me(self, request):
         serializer = self.get_serializer(request.user)
@@ -392,8 +396,11 @@ class UserViewSet(viewsets.ModelViewSet):
         user = authenticate(username=username, password=password)
         
         if user:
+            login(request, user)
             serializer = self.get_serializer(user)
-            return Response(serializer.data)
+            return Response({
+                'user': serializer.data
+            })
         else:
             return Response(
                 {'error': 'Invalid credentials'},

@@ -1,165 +1,216 @@
 # Thread Clone API
 
-## Authentication APIs
+## API Documentation
 
-### User Authentication
+### 1. Authentication APIs (`/api/auth/users/`)
 
-```
-POST   /api/auth/users/login/           # Login
-POST   /api/auth/users/                 # Register
-GET    /api/auth/users/me/              # Get current user
-PUT    /api/auth/users/me/              # Update current user
-POST   /api/auth/users/change_password/ # Change password
-```
+#### User Registration
 
-### User Management
-
-```
-GET    /api/auth/users/                 # List all users
-GET    /api/auth/users/{id}/            # Get user detail
-PUT    /api/auth/users/{id}/            # Update user
-DELETE /api/auth/users/{id}/            # Delete user
-```
-
-## Thread APIs
-
-### Thread Management
-
-```
-GET    /api/threads/                    # List all threads
-POST   /api/threads/                    # Create new thread
-GET    /api/threads/{id}/               # Get thread detail
-PUT    /api/threads/{id}/               # Update thread
-DELETE /api/threads/{id}/               # Delete thread
-```
-
-### Thread Feed
-
-```
-GET    /api/threads/feed/               # Get all threads feed
-GET    /api/threads/following-feed/     # Get following users' threads feed
-```
-
-### Thread Interactions
-
-```
-POST   /api/threads/{id}/like/         # Like/unlike thread
-POST   /api/threads/{id}/repost/        # Repost/unrepost thread
-```
-
-## Comment APIs
-
-### Comment Management
-
-```
-GET    /api/threads/{thread_id}/comments/           # List comments
-POST   /api/threads/{thread_id}/comments/           # Create comment
-GET    /api/threads/{thread_id}/comments/{id}/      # Get comment detail
-PUT    /api/threads/{thread_id}/comments/{id}/      # Update comment
-DELETE /api/threads/{thread_id}/comments/{id}/      # Delete comment
-```
-
-### Comment Interactions
-
-```
-POST   /api/threads/{thread_id}/comments/{id}/like/    # Like/unlike comment
-POST   /api/threads/{thread_id}/comments/{id}/repost/   # Repost/unrepost comment
-```
-
-## Follow APIs
-
-### Follow Management
-
-```
-GET    /api/follows/                    # List follows
-POST   /api/follows/                    # Create follow
-DELETE /api/follows/{id}/               # Delete follow
-```
-
-## Notification APIs
-
-### Notification Management
-
-```
-GET    /api/notifications/              # List notifications
-GET    /api/notifications/unread-count/ # Get unread notifications count
-POST   /api/notifications/{id}/mark-read/ # Mark notification as read
-```
-
-## Request/Response Examples
-
-### Login
-
-```json
-POST /api/auth/users/login/
-{
-    "username": "user1",
-    "password": "password123"
-}
-```
-
-### Register
-
-```json
-POST /api/auth/users/
-{
+- **Endpoint**: `POST /api/auth/users/`
+- **Body**:
+  ```json
+  {
     "username": "newuser",
     "password": "password123",
     "password2": "password123",
     "email": "user@example.com",
     "first_name": "John",
     "last_name": "Doe"
-}
-```
+  }
+  ```
 
-### Create Thread
+#### User Login
 
-```json
-POST /api/threads/
-{
-    "content": "Thread content here"
-}
-```
+- **Endpoint**: `POST /api/auth/users/login/`
+- **Body**:
+  ```json
+  {
+    "username": "username",
+    "password": "password"
+  }
+  ```
 
-### Create Comment
+#### Get Current User
 
-```json
-POST /api/threads/{thread_id}/comments/
-{
-    "content": "Comment content here"
-}
-```
+- **Endpoint**: `GET /api/auth/users/me/`
+- **Authentication**: Required
 
-### Change Password
+#### Change Password
 
-```json
-POST /api/auth/users/change_password/
-{
+- **Endpoint**: `POST /api/auth/users/change_password/`
+- **Authentication**: Required
+- **Body**:
+  ```json
+  {
     "old_password": "oldpassword",
-    "new_password": "newpassword",
-    "new_password2": "newpassword"
+    "new_password": "newpassword"
+  }
+  ```
+
+### 2. Thread APIs (`/api/threads/`)
+
+#### Get All Threads
+
+- **Endpoint**: `GET /api/threads/`
+- **Authentication**: Required
+- **Query Params**: `?page=1` (pagination)
+
+#### Get Thread Feed
+
+- **Endpoint**: `GET /api/threads/feed/`
+- **Authentication**: Required
+- **Query Params**: `?page=1` (pagination)
+
+#### Get Following Feed
+
+- **Endpoint**: `GET /api/threads/following_feed/`
+- **Authentication**: Required
+- **Query Params**: `?page=1` (pagination)
+
+#### Create Thread
+
+- **Endpoint**: `POST /api/threads/`
+- **Authentication**: Required
+- **Body**:
+  ```json
+  {
+    "content": "Thread content here"
+  }
+  ```
+
+#### Like Thread
+
+- **Endpoint**: `POST /api/threads/{thread_id}/like/`
+- **Authentication**: Required
+
+#### Repost Thread
+
+- **Endpoint**: `POST /api/threads/{thread_id}/repost/`
+- **Authentication**: Required
+
+### 3. Comment APIs (`/api/threads/{thread_id}/comments/`)
+
+#### Get Thread Comments
+
+- **Endpoint**: `GET /api/threads/{thread_id}/comments/`
+- **Authentication**: Required
+- **Query Params**: `?page=1` (pagination)
+
+#### Create Comment
+
+- **Endpoint**: `POST /api/threads/{thread_id}/comments/`
+- **Authentication**: Required
+- **Body**:
+  ```json
+  {
+    "content": "Comment content here"
+  }
+  ```
+
+#### Like Comment
+
+- **Endpoint**: `POST /api/threads/{thread_id}/comments/{comment_id}/like/`
+- **Authentication**: Required
+
+#### Repost Comment
+
+- **Endpoint**: `POST /api/threads/{thread_id}/comments/{comment_id}/repost/`
+- **Authentication**: Required
+
+### 4. Follow APIs (`/api/follows/`)
+
+#### Get Following List
+
+- **Endpoint**: `GET /api/follows/`
+- **Authentication**: Required
+- **Query Params**: `?page=1` (pagination)
+
+#### Follow User
+
+- **Endpoint**: `POST /api/follows/`
+- **Authentication**: Required
+- **Body**:
+  ```json
+  {
+    "followed": user_id
+  }
+  ```
+
+### 5. Notification APIs (`/api/notifications/`)
+
+#### Get Notifications
+
+- **Endpoint**: `GET /api/notifications/`
+- **Authentication**: Required
+- **Query Params**: `?page=1` (pagination)
+
+#### Get Unread Notification Count
+
+- **Endpoint**: `GET /api/notifications/unread_count/`
+- **Authentication**: Required
+
+#### Mark Notification as Read
+
+- **Endpoint**: `POST /api/notifications/{notification_id}/mark_read/`
+- **Authentication**: Required
+
+### Authentication & Headers
+
+All APIs (except registration and login) require authentication. Required headers:
+
+```
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer <access_token>  # For JWT authentication
+```
+
+Authentication methods supported:
+
+- JWT Authentication (Bearer token)
+- Session Authentication
+- Basic Authentication
+
+#### JWT Authentication
+
+- Access Token: Valid for 60 minutes
+- Refresh Token: Valid for 1 day
+- Login response includes both tokens:
+  ```json
+  {
+    "user": {
+      "id": 1,
+      "username": "username",
+      "email": "user@example.com",
+      "first_name": "John",
+      "last_name": "Doe"
+    },
+    "tokens": {
+      "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+      "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+    }
+  }
+  ```
+
+### Pagination
+
+- Default: 10 items per page
+- Query parameter: `?page=1`
+
+### Error Responses
+
+```json
+{
+  "detail": "Error message here"
 }
 ```
 
-## Authentication
+Status codes:
 
-- All endpoints except login and register require authentication
-- Authentication is done using Django's session authentication
-- Include credentials in requests (username/password)
-
-## Pagination
-
-- Most list endpoints support pagination
-- Default page size: 7 items per page
-- Use `?page=X` query parameter for pagination
-
-## Error Responses
-
-- 400 Bad Request: Invalid input data
-- 401 Unauthorized: Not authenticated
-- 403 Forbidden: Not authorized
-- 404 Not Found: Resource not found
-- 500 Internal Server Error: Server error
+- 400: Bad Request
+- 401: Unauthorized
+- 403: Forbidden
+- 404: Not Found
+- 500: Server Error
 
 ## Development Setup
 
