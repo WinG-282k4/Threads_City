@@ -42,7 +42,7 @@ class ThreadSerializer(serializers.ModelSerializer):
         model = Thread
         fields = ['id', 'content', 'user', 'created_at', 
                  'comments', 'likes_count', 'is_liked',
-                 'reposts_count', 'is_reposted']
+                 'reposts_count', 'is_reposted', 'comment_count']
 
     def get_likes_count(self, obj):
         return obj.like_set.count()

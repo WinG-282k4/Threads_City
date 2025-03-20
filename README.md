@@ -55,7 +55,7 @@
 - **Authentication**: Required
 - **Query Params**: `?page=1` (pagination)
 
-#### Get Thread Feed
+#### Get Thread Feed: giống với `GET /api/threads/` nhưng chỉ có thể đọc
 
 - **Endpoint**: `GET /api/threads/feed/`
 - **Authentication**: Required
