@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from sorl.thumbnail import ImageField
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
 
 
 class MyUser(models.Model):
@@ -11,3 +13,10 @@ class MyUser(models.Model):
 
     def __str__(self):
         return self.user.username
+
+@receiver(pre_delete, sender=User)
+def delete_myuser(sender, instance, **kwargs):
+    try:
+        instance.myuser.delete()
+    except MyUser.DoesNotExist:
+        pass

@@ -13,6 +13,7 @@ from itertools import chain
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.utils.decorators import method_decorator
 
 from thread.models import Comment, Thread, RepostComment, Follow
 from .utils import check_following
@@ -344,8 +345,13 @@ def profile_edit(request, id):
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
-    permission_classes = [permissions.IsAuthenticated]
     serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_permissions(self):
+        if self.action in ['create', 'login']:
+            return []
+        return [permission() for permission in self.permission_classes]
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -354,10 +360,42 @@ class UserViewSet(viewsets.ModelViewSet):
             return UserUpdateSerializer
         return UserSerializer
 
+    @method_decorator(csrf_exempt)
+    @action(detail=False, methods=['post'])
+    def login(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        
+        if not username or not password:
+            return Response({
+                'status': 'error',
+                'errors': {
+                    'detail': 'Please provide both username and password'
+                }
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        user = authenticate(username=username, password=password)
+        if user:
+            login(request, user)  # Create session
+            return Response({
+                'status': 'success',
+                'data': UserSerializer(user).data
+            })
+        else:
+            return Response({
+                'status': 'error',
+                'errors': {
+                    'detail': 'Invalid credentials'
+                }
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
     @action(detail=False, methods=['get'])
     def me(self, request):
         serializer = self.get_serializer(request.user)
-        return Response(serializer.data)
+        return Response({
+            'status': 'success',
+            'data': serializer.data
+        })
 
     @action(detail=False, methods=['put', 'patch'])
     def update_me(self, request):
@@ -365,9 +403,14 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = UserUpdateSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            # Return updated user data using UserSerializer
-            return Response(UserSerializer(user).data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                'status': 'success',
+                'data': UserSerializer(user).data
+            })
+        return Response({
+            'status': 'error',
+            'errors': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['post'])
     def change_password(self, request):
@@ -375,9 +418,25 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = ChangePasswordSerializer(data=request.data)
         if serializer.is_valid():
             if not user.check_password(serializer.data.get('old_password')):
-                return Response({'old_password': ['Wrong password.']}, 
-                             status=status.HTTP_400_BAD_REQUEST)
+                return Response({
+                    'status': 'error',
+                    'errors': {'old_password': ['Wrong password.']}
+                }, status=status.HTTP_400_BAD_REQUEST)
             user.set_password(serializer.data.get('new_password'))
             user.save()
-            return Response({'status': 'password set'})
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                'status': 'success',
+                'data': {'message': 'Password changed successfully'}
+            })
+        return Response({
+            'status': 'error',
+            'errors': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['post'])
+    def logout(self, request):
+        logout(request)
+        return Response({
+            'status': 'success',
+            'data': {'message': 'Logged out successfully'}
+        })

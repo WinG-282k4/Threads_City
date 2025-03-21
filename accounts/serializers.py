@@ -26,14 +26,25 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         if attrs['password'] != attrs['password2']:
-            raise serializers.ValidationError({"password": "Password fields didn't match."})
+            raise serializers.ValidationError({
+                'status': 'error',
+                'errors': {'password': 'Password fields didn\'t match.'}
+            })
         return attrs
 
     def create(self, validated_data):
         validated_data.pop('password2')
         user = User.objects.create_user(**validated_data)
-        MyUser.objects.create(user=user)
-        return user
+        MyUser.objects.get_or_create(user=user)
+        return user  # Return user object directly
+
+    def to_representation(self, instance):
+        # Wrap the response with status here
+        data = super().to_representation(instance)
+        return {
+            'status': 'success',
+            'data': data
+        }
 
 class UserUpdateSerializer(serializers.ModelSerializer):
     avatar = serializers.CharField(required=False, write_only=True)
@@ -44,20 +55,32 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         fields = ['email', 'first_name', 'last_name', 'avatar', 'bio']
 
     def update(self, instance, validated_data):
-        avatar = validated_data.pop('avatar', None)
-        bio = validated_data.pop('bio', None)
+        try:
+            avatar = validated_data.pop('avatar', None)
+            bio = validated_data.pop('bio', None)
 
-        # Update MyUser fields if provided
-        if avatar or bio:
-            myuser = instance.myuser
-            if avatar:
-                myuser.link = avatar
-            if bio:
-                myuser.bio = bio
-            myuser.save()
+            # Update MyUser fields if provided
+            if avatar or bio:
+                myuser = instance.myuser
+                if avatar:
+                    myuser.link = avatar
+                if bio:
+                    myuser.bio = bio
+                myuser.save()
 
-        # Update User fields
-        return super().update(instance, validated_data)
+            # Update User fields
+            user = super().update(instance, validated_data)
+            return {
+                'status': 'success',
+                'data': UserSerializer(user).data
+            }
+        except Exception as e:
+            if isinstance(e, serializers.ValidationError):
+                raise e
+            raise serializers.ValidationError({
+                'status': 'error',
+                'errors': str(e)
+            })
 
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
@@ -66,5 +89,10 @@ class ChangePasswordSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         if attrs['new_password'] != attrs['new_password2']:
-            raise serializers.ValidationError({"new_password": "Password fields didn't match."})
+            raise serializers.ValidationError({
+                'status': 'error',
+                'errors': {
+                    'new_password': 'Password fields didn\'t match.'
+                }
+            })
         return attrs 
