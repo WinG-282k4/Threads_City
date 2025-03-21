@@ -2,6 +2,47 @@
 
 ## API Documentation
 
+### Response Format
+
+Most API responses follow this format:
+
+#### Success Response for Create/Update Operations
+
+```json
+{
+  "status": "success",
+  "data": {
+    // Response data here
+  }
+}
+```
+
+#### Error Response for Create/Update Operations
+
+```json
+{
+  "status": "error",
+  "errors": {
+    // Error messages here
+  }
+}
+```
+
+#### List/Get Operations Response
+
+List and get operations return data directly without status wrapper:
+
+```json
+{
+  "count": 10,
+  "next": "http://api.example.org/endpoint/?page=2",
+  "previous": null,
+  "results": [
+    // Array of items
+  ]
+}
+```
+
 ### 1. Authentication APIs (`/api/auth/users/`)
 
 #### User Registration
@@ -19,15 +60,18 @@
     "last_name": "Doe"
   }
   ```
-- **Response**:
+- **Success Response**:
   ```json
   {
-    "id": 1,
-    "username": "newuser",
-    "email": "user@example.com",
-    "first_name": "John",
-    "last_name": "Doe",
-    "avatar": "url_to_avatar_image"
+    "status": "success",
+    "data": {
+      "id": 1,
+      "username": "newuser",
+      "email": "user@example.com",
+      "first_name": "John",
+      "last_name": "Doe",
+      "avatar": "url_to_avatar_image"
+    }
   }
   ```
 
@@ -42,7 +86,21 @@
     "password": "password"
   }
   ```
-- **Response**: JWT Token
+- **Success Response**:
+  ```json
+  {
+    "status": "success",
+    "data": {
+      "id": 1,
+      "username": "username",
+      "email": "email@example.com",
+      "first_name": "First",
+      "last_name": "Last",
+      "date_joined": "2024-03-21T10:00:00Z",
+      "avatar": "url_to_avatar_image"
+    }
+  }
+  ```
 
 #### Get Current User
 
@@ -75,16 +133,19 @@
     "bio": "New bio text"
   }
   ```
-- **Response**:
+- **Success Response**:
   ```json
   {
-    "id": 1,
-    "username": "username",
-    "email": "new.email@example.com",
-    "first_name": "New First Name",
-    "last_name": "New Last Name",
-    "date_joined": "2024-03-21T10:00:00Z",
-    "avatar": "new_avatar_link"
+    "status": "success",
+    "data": {
+      "id": 1,
+      "username": "username",
+      "email": "new.email@example.com",
+      "first_name": "New First Name",
+      "last_name": "New Last Name",
+      "date_joined": "2024-03-21T10:00:00Z",
+      "avatar": "new_avatar_link"
+    }
   }
   ```
 
@@ -100,22 +161,13 @@
     "new_password2": "newpassword"
   }
   ```
-- **Response**:
+- **Success Response**:
   ```json
   {
-    "status": "password set"
-  }
-  ```
-- **Error Response**:
-  ```json
-  {
-    "new_password": ["Password fields didn't match."]
-  }
-  ```
-  OR
-  ```json
-  {
-    "old_password": ["Wrong password."]
+    "status": "success",
+    "data": {
+      "message": "Password changed successfully"
+    }
   }
   ```
 
@@ -193,7 +245,7 @@
           }
         ],
         "created_at": "2024-03-21T10:00:00Z",
-        "comments": [...],
+        "comments": [],
         "likes_count": 5,
         "is_liked": false,
         "reposts_count": 3,
@@ -225,33 +277,30 @@
   {
     "content": "Thread content",
     "images": [
-      // Optional - list of image URLs
       "https://example.com/image1.jpg",
       "https://example.com/image2.jpg"
     ]
   }
   ```
-- **Response**:
+- **Success Response**:
   ```json
   {
-    "id": 1,
-    "content": "Thread content",
+    "id": 14,
+    "content": "test lại respone thread mới",
     "user": {
-      "id": 1,
-      "username": "user1",
-      "first_name": "First",
-      "last_name": "Last",
-      "avatar": "https://example.com/avatar.jpg"
+      "id": 21,
+      "username": "newuserthanh7",
+      "email": "user@example.com",
+      "first_name": "John",
+      "last_name": "Doe",
+      "date_joined": "2025-03-21T10:12:52.191155+06:30",
+      "avatar": null
     },
-    "created_at": "2024-03-20T10:30:00Z",
+    "created_at": "2025-03-21T10:27:51.301720+06:30",
     "thread_images": [
       {
-        "id": 1,
+        "id": 8,
         "image": "https://example.com/image1.jpg"
-      },
-      {
-        "id": 2,
-        "image": "https://example.com/image2.jpg"
       }
     ],
     "likes_count": 0,
@@ -262,25 +311,27 @@
   }
   ```
 
-#### Like Thread
+#### Like/Unlike Thread
 
 - **Endpoint**: `POST /api/threads/{thread_id}/like/`
 - **Authentication**: Required
 - **Response**:
   ```json
   {
-    "status": "success"
+    "likes_count": 6,
+    "is_liked": true
   }
   ```
 
-#### Repost Thread
+#### Repost/Unrepost Thread
 
 - **Endpoint**: `POST /api/threads/{thread_id}/repost/`
 - **Authentication**: Required
 - **Response**:
   ```json
   {
-    "status": "success"
+    "reposts_count": 4,
+    "is_reposted": true
   }
   ```
 
@@ -291,27 +342,31 @@
 - **Endpoint**: `GET /api/threads/{thread_id}/comments/`
 - **Authentication**: Required
 - **Response**:
-
-```json
-[
+  ```json
   {
-    "id": 1,
-    "content": "Comment content",
-    "user": {
-      "id": 1,
-      "username": "username",
-      "first_name": "First",
-      "last_name": "Last",
-      "email": "email@example.com",
-      "avatar": "url_to_avatar_image"
-    },
-    "created_at": "2024-03-21T10:00:00Z",
-    "likes_count": 5,
-    "is_liked": false,
-    "replies_count": 3
+    "count": 10,
+    "next": "http://api.example.org/threads/1/comments/?page=2",
+    "previous": null,
+    "results": [
+      {
+        "id": 1,
+        "content": "Comment content",
+        "user": {
+          "id": 1,
+          "username": "username",
+          "first_name": "First",
+          "last_name": "Last",
+          "email": "email@example.com",
+          "avatar": "url_to_avatar_image"
+        },
+        "created_at": "2024-03-21T10:00:00Z",
+        "likes_count": 5,
+        "is_liked": false,
+        "replies_count": 3
+      }
+    ]
   }
-]
-```
+  ```
 
 #### Get Replies for a Comment
 
@@ -340,48 +395,61 @@
 ]
 ```
 
-#### Create a Comment
+#### Create Comment
 
 - **Endpoint**: `POST /api/threads/{thread_id}/comments/`
 - **Authentication**: Required
 - **Body**:
+  ```json
+  {
+    "content": "Your comment content",
+    "parent_comment_id": null
+  }
+  ```
+- **Success Response**:
+  ```json
+  {
+    "id": 21,
+    "content": "test lại respone thread mới",
+    "user": {
+      "id": 21,
+      "username": "newuserthanh7",
+      "email": "user@example.com",
+      "first_name": "John",
+      "last_name": "Doe",
+      "date_joined": "2025-03-21T10:12:52.191155+06:30",
+      "avatar": null
+    },
+    "created_at": "2025-03-21T10:29:21.587547+06:30",
+    "likes_count": 0,
+    "is_liked": false,
+    "replies_count": 0
+  }
+  ```
 
-```json
-{
-  "content": "Your comment content",
-  "parent_comment_id": null // Optional: ID of parent comment if this is a reply
-}
-```
+#### Like/Unlike Comment
 
-- **Response**: Created comment object with same structure as GET response
+- **Endpoint**: `POST /api/threads/{thread_id}/comments/{comment_id}/like/`
+- **Authentication**: Required
+- **Response**:
+  ```json
+  {
+    "likes_count": 6,
+    "is_liked": true
+  }
+  ```
 
-#### Like/Unlike a Comment
+#### Repost/Unrepost Comment
 
-```http
-POST /api/threads/{thread_id}/comments/{comment_id}/like/
-```
-
-Response:
-
-```json
-{
-  "status": "success"
-}
-```
-
-#### Repost/Unrepost a Comment
-
-```http
-POST /api/threads/{thread_id}/comments/{comment_id}/repost/
-```
-
-Response:
-
-```json
-{
-  "status": "success"
-}
-```
+- **Endpoint**: `POST /api/threads/{thread_id}/comments/{comment_id}/repost/`
+- **Authentication**: Required
+- **Response**:
+  ```json
+  {
+    "reposts_count": 4,
+    "is_reposted": true
+  }
+  ```
 
 ### 4. Follow APIs (`/api/follows/`)
 
@@ -415,8 +483,7 @@ Response:
           "email": "email2@example.com",
           "avatar": "url_to_avatar_image2"
         },
-        "created_at": "2024-03-21T10:00:00Z",
-        "status": "Followed successfully"
+        "created_at": "2024-03-21T10:00:00Z"
       }
     ]
   }
@@ -429,10 +496,35 @@ Response:
 - **Body**:
   ```json
   {
-    "followed_id": user_id
+    "followed_id": 2
   }
   ```
-- **Response**: Follow object with same structure as GET response
+- **Success Response**:
+  ```json
+  {
+    "id": 7,
+    "follower": {
+      "id": 21,
+      "username": "newuserthanh7",
+      "email": "user@example.com",
+      "first_name": "John",
+      "last_name": "Doe",
+      "date_joined": "2025-03-21T10:12:52.191155+06:30",
+      "avatar": null
+    },
+    "followed": {
+      "id": 2,
+      "username": "testuser2",
+      "email": "user@example.com",
+      "first_name": "John",
+      "last_name": "Doe",
+      "date_joined": "2025-03-19T22:24:54.388729+06:30",
+      "avatar": "Test avatar"
+    },
+    "created_at": "2025-03-21T10:30:18.530447+06:30",
+    "status": "Followed successfully"
+  }
+  ```
 
 #### Get Followers Count
 
@@ -503,8 +595,8 @@ Response:
 - **Response**:
   ```json
   {
-    "status": "success",
-    "id": 1
+    "id": 1,
+    "is_read": true
   }
   ```
 
@@ -515,7 +607,6 @@ Response:
 - **Response**:
   ```json
   {
-    "status": "success",
     "message": "All notifications marked as read"
   }
   ```
