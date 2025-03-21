@@ -223,11 +223,44 @@
 - **Body**:
   ```json
   {
-    "content": "Thread content here",
-    "images": ["image1.jpg", "image2.jpg"]
+    "content": "Thread content",
+    "images": [
+      // Optional - list of image URLs
+      "https://example.com/image1.jpg",
+      "https://example.com/image2.jpg"
+    ]
   }
   ```
-- **Response**: Created thread object with same structure as GET response
+- **Response**:
+  ```json
+  {
+    "id": 1,
+    "content": "Thread content",
+    "user": {
+      "id": 1,
+      "username": "user1",
+      "first_name": "First",
+      "last_name": "Last",
+      "avatar": "https://example.com/avatar.jpg"
+    },
+    "created_at": "2024-03-20T10:30:00Z",
+    "thread_images": [
+      {
+        "id": 1,
+        "image": "https://example.com/image1.jpg"
+      },
+      {
+        "id": 2,
+        "image": "https://example.com/image2.jpg"
+      }
+    ],
+    "likes_count": 0,
+    "is_liked": false,
+    "reposts_count": 0,
+    "is_reposted": false,
+    "comment_count": 0
+  }
+  ```
 
 #### Like Thread
 

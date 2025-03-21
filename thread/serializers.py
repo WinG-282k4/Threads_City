@@ -34,7 +34,8 @@ class CommentSerializer(serializers.ModelSerializer):
 class ThreadSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     comments = CommentSerializer(many=True, read_only=True)
-    images = ThreadImageSerializer(many=True, read_only=True)
+    images = serializers.ListField(child=serializers.URLField(), write_only=True, required=False)
+    thread_images = ThreadImageSerializer(source='image_thread', many=True, read_only=True)
     likes_count = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
     reposts_count = serializers.SerializerMethodField()
@@ -43,7 +44,7 @@ class ThreadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Thread
         fields = ['id', 'content', 'user', 'created_at', 
-                 'comments', 'images', 'likes_count', 'is_liked',
+                 'comments', 'images', 'thread_images', 'likes_count', 'is_liked',
                  'reposts_count', 'is_reposted', 'comment_count']
 
     def get_likes_count(self, obj):
@@ -63,6 +64,13 @@ class ThreadSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             return obj.repost_set.filter(user=request.user).exists()
         return False
+
+    def create(self, validated_data):
+        images = validated_data.pop('images', [])
+        thread = Thread.objects.create(**validated_data)
+        for image_url in images:
+            ThreadImage.objects.create(thread=thread, image=image_url)
+        return thread
 
 class FollowSerializer(serializers.ModelSerializer):
     follower = UserSerializer(read_only=True)

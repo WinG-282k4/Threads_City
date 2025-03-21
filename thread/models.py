@@ -29,7 +29,7 @@ class ThreadImage(models.Model):
     thread = models.ForeignKey(
         Thread, on_delete=models.CASCADE, related_name="image_thread"
     )
-    image = ImageField(upload_to="thread_images/")
+    image = models.URLField(max_length=500)
 
     def __str__(self):
         return f"Thread image of {self.thread.content[:20]}"
