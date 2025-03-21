@@ -130,15 +130,20 @@ def create_thread(request):
             create_cmt_images(image_list[left:right], comment)
             # create child comments
             i = 2
+            previous_cmt = comment  # Keep track of the previous comment
             while i < len(content_list):
                 child_cmt = create_cmt(
-                    content_list[i], request.user, thread, parent_comment=comment
+                    content=content_list[i],
+                    user=request.user,
+                    thread=thread,
+                    parent_comment=previous_cmt,  # Use the previous comment as parent
                 )
                 left = 0
                 for j in range(i):
                     left += int(image_count_list[j])
                 right = left + int(image_count_list[i])
-                create_cmt_images(image_list[left:right], comment=child_cmt)
+                create_cmt_images(image_list=image_list[left:right], comment=child_cmt)
+                previous_cmt = child_cmt  # Update previous comment for next iteration
                 i += 1
 
         messages.success(request, "Thread created successfully.")
@@ -217,7 +222,7 @@ def create_reply(request):
                     content=content_list[i],
                     user=request.user,
                     thread=thread,
-                    parent_comment=cmt,
+                    parent_comment=parent_comment,  # Use the same parent_comment for all replies
                 )
                 left = 0
                 for j in range(i):
@@ -584,19 +589,22 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         thread_id = self.kwargs.get('thread_pk')
-        return Comment.objects.filter(thread_id=thread_id).order_by('-created_at')
+        return Comment.objects.filter(thread_id=thread_id, parent_comment=None).order_by('-created_at')
+
+    @action(detail=True, methods=['get'])
+    def replies(self, request, thread_pk=None, pk=None):
+        comment = self.get_object()
+        replies = Comment.objects.filter(parent_comment=comment).order_by('-created_at')
+        serializer = self.get_serializer(replies, many=True)
+        return Response(serializer.data)
 
     def perform_create(self, serializer):
         thread_id = self.kwargs.get('thread_pk')
         thread = get_object_or_404(Thread, id=thread_id)
-        
-        # Get parent_comment_id from request data
         parent_comment_id = self.request.data.get('parent_comment_id')
         parent_comment = None
-        
         if parent_comment_id:
-            parent_comment = get_object_or_404(Comment, id=parent_comment_id, thread=thread)
-            
+            parent_comment = get_object_or_404(Comment, id=parent_comment_id)
         serializer.save(user=self.request.user, thread=thread, parent_comment=parent_comment)
 
     @action(detail=True, methods=['post'])

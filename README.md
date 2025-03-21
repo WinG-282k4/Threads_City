@@ -7,6 +7,7 @@
 #### User Registration
 
 - **Endpoint**: `POST /api/auth/users/`
+- **Authentication**: Not Required
 - **Body**:
   ```json
   {
@@ -18,10 +19,22 @@
     "last_name": "Doe"
   }
   ```
+- **Response**:
+  ```json
+  {
+    "id": 1,
+    "username": "newuser",
+    "email": "user@example.com",
+    "first_name": "John",
+    "last_name": "Doe",
+    "avatar": "url_to_avatar_image"
+  }
+  ```
 
 #### User Login
 
 - **Endpoint**: `POST /api/auth/users/login/`
+- **Authentication**: Not Required
 - **Body**:
   ```json
   {
@@ -29,11 +42,51 @@
     "password": "password"
   }
   ```
+- **Response**: JWT Token
 
 #### Get Current User
 
 - **Endpoint**: `GET /api/auth/users/me/`
 - **Authentication**: Required
+- **Response**:
+  ```json
+  {
+    "id": 1,
+    "username": "username",
+    "email": "email@example.com",
+    "first_name": "First",
+    "last_name": "Last",
+    "date_joined": "2024-03-21T10:00:00Z",
+    "avatar": "url_to_avatar_image"
+  }
+  ```
+
+#### Update Current User
+
+- **Endpoint**: `PUT/PATCH /api/auth/users/update_me/`
+- **Authentication**: Required
+- **Body**:
+  ```json
+  {
+    "email": "new.email@example.com",
+    "first_name": "New First Name",
+    "last_name": "New Last Name",
+    "avatar": "new_avatar_link",
+    "bio": "New bio text"
+  }
+  ```
+- **Response**:
+  ```json
+  {
+    "id": 1,
+    "username": "username",
+    "email": "new.email@example.com",
+    "first_name": "New First Name",
+    "last_name": "New Last Name",
+    "date_joined": "2024-03-21T10:00:00Z",
+    "avatar": "new_avatar_link"
+  }
+  ```
 
 #### Change Password
 
@@ -43,7 +96,26 @@
   ```json
   {
     "old_password": "oldpassword",
-    "new_password": "newpassword"
+    "new_password": "newpassword",
+    "new_password2": "newpassword"
+  }
+  ```
+- **Response**:
+  ```json
+  {
+    "status": "password set"
+  }
+  ```
+- **Error Response**:
+  ```json
+  {
+    "new_password": ["Password fields didn't match."]
+  }
+  ```
+  OR
+  ```json
+  {
+    "old_password": ["Wrong password."]
   }
   ```
 
@@ -66,7 +138,8 @@
         "username": "username",
         "first_name": "First",
         "last_name": "Last",
-        "email": "email@example.com"
+        "email": "email@example.com",
+        "avatar": "url_to_avatar_image"
       }
     ]
   }
@@ -83,7 +156,8 @@
     "username": "username",
     "first_name": "First",
     "last_name": "Last",
-    "email": "email@example.com"
+    "email": "email@example.com",
+    "avatar": "url_to_avatar_image"
   }
   ```
 
@@ -94,6 +168,41 @@
 - **Endpoint**: `GET /api/threads/`
 - **Authentication**: Required
 - **Query Params**: `?page=1` (pagination)
+- **Response**:
+  ```json
+  {
+    "count": 10,
+    "next": "http://api.example.org/threads/?page=2",
+    "previous": null,
+    "results": [
+      {
+        "id": 1,
+        "content": "Thread content",
+        "user": {
+          "id": 1,
+          "username": "username",
+          "first_name": "First",
+          "last_name": "Last",
+          "email": "email@example.com",
+          "avatar": "url_to_avatar_image"
+        },
+        "images": [
+          {
+            "id": 1,
+            "image": "url_to_thread_image"
+          }
+        ],
+        "created_at": "2024-03-21T10:00:00Z",
+        "comments": [...],
+        "likes_count": 5,
+        "is_liked": false,
+        "reposts_count": 3,
+        "is_reposted": false,
+        "comment_count": 10
+      }
+    ]
+  }
+  ```
 
 #### Get Thread Feed: giống với `GET /api/threads/` nhưng chỉ có thể đọc
 
@@ -114,29 +223,41 @@
 - **Body**:
   ```json
   {
-    "content": "Thread content here"
+    "content": "Thread content here",
+    "images": ["image1.jpg", "image2.jpg"]
   }
   ```
+- **Response**: Created thread object with same structure as GET response
 
 #### Like Thread
 
 - **Endpoint**: `POST /api/threads/{thread_id}/like/`
 - **Authentication**: Required
+- **Response**:
+  ```json
+  {
+    "status": "success"
+  }
+  ```
 
 #### Repost Thread
 
 - **Endpoint**: `POST /api/threads/{thread_id}/repost/`
 - **Authentication**: Required
+- **Response**:
+  ```json
+  {
+    "status": "success"
+  }
+  ```
 
-### 3. Comment API
+### 3. Comment APIs (`/api/threads/{thread_id}/comments/`)
 
 #### Get Comments for a Thread
 
-```http
-GET /api/threads/{thread_id}/comments/
-```
-
-Response:
+- **Endpoint**: `GET /api/threads/{thread_id}/comments/`
+- **Authentication**: Required
+- **Response**:
 
 ```json
 [
@@ -148,43 +269,58 @@ Response:
       "username": "username",
       "first_name": "First",
       "last_name": "Last",
-      "email": "email@example.com"
+      "email": "email@example.com",
+      "avatar": "url_to_avatar_image"
     },
     "created_at": "2024-03-21T10:00:00Z",
     "likes_count": 5,
     "is_liked": false,
-    "replies_count": 3,
-    "parent_comment_id": null
+    "replies_count": 3
+  }
+]
+```
+
+#### Get Replies for a Comment
+
+- **Endpoint**: `GET /api/threads/{thread_id}/comments/{comment_id}/replies/`
+- **Authentication**: Required
+- **Response**:
+
+```json
+[
+  {
+    "id": 2,
+    "content": "Reply content",
+    "user": {
+      "id": 1,
+      "username": "username",
+      "first_name": "First",
+      "last_name": "Last",
+      "email": "email@example.com",
+      "avatar": "url_to_avatar_image"
+    },
+    "created_at": "2024-03-21T10:00:00Z",
+    "likes_count": 2,
+    "is_liked": false,
+    "replies_count": 0
   }
 ]
 ```
 
 #### Create a Comment
 
-```http
-POST /api/threads/{thread_id}/comments/
-Content-Type: application/json
+- **Endpoint**: `POST /api/threads/{thread_id}/comments/`
+- **Authentication**: Required
+- **Body**:
 
+```json
 {
-    "content": "Your comment content"
+  "content": "Your comment content",
+  "parent_comment_id": null // Optional: ID of parent comment if this is a reply
 }
 ```
 
-Response: Created comment object
-
-#### Create a Reply to a Comment
-
-```http
-POST /api/threads/{thread_id}/comments/
-Content-Type: application/json
-
-{
-    "content": "Your reply content",
-    "parent_comment_id": 1
-}
-```
-
-Response: Created reply comment object
+- **Response**: Created comment object with same structure as GET response
 
 #### Like/Unlike a Comment
 
@@ -221,8 +357,39 @@ Response:
 - **Endpoint**: `GET /api/follows/`
 - **Authentication**: Required
 - **Query Params**: `?page=1` (pagination)
+- **Response**:
+  ```json
+  {
+    "count": 10,
+    "next": "http://api.example.org/follows/?page=2",
+    "previous": null,
+    "results": [
+      {
+        "id": 1,
+        "follower": {
+          "id": 1,
+          "username": "username",
+          "first_name": "First",
+          "last_name": "Last",
+          "email": "email@example.com",
+          "avatar": "url_to_avatar_image"
+        },
+        "followed": {
+          "id": 2,
+          "username": "username2",
+          "first_name": "First2",
+          "last_name": "Last2",
+          "email": "email2@example.com",
+          "avatar": "url_to_avatar_image2"
+        },
+        "created_at": "2024-03-21T10:00:00Z",
+        "status": "Followed successfully"
+      }
+    ]
+  }
+  ```
 
-#### Follow User
+#### Follow/Unfollow User
 
 - **Endpoint**: `POST /api/follows/`
 - **Authentication**: Required
@@ -232,6 +399,7 @@ Response:
     "followed_id": user_id
   }
   ```
+- **Response**: Follow object with same structure as GET response
 
 #### Get Followers Count
 
@@ -240,7 +408,7 @@ Response:
 - **Response**:
   ```json
   {
-    "count": 123 // Số người đang follow bạn
+    "count": 123
   }
   ```
 
@@ -265,16 +433,18 @@ Response:
           "username": "username",
           "first_name": "First",
           "last_name": "Last",
-          "email": "email@example.com"
+          "email": "email@example.com",
+          "avatar": "url_to_avatar_image"
         },
         "actioner": {
           "id": 2,
-          "username": "actioner",
-          "first_name": "Action",
-          "last_name": "User",
-          "email": "actioner@example.com"
+          "username": "username2",
+          "first_name": "First2",
+          "last_name": "Last2",
+          "email": "email2@example.com",
+          "avatar": "url_to_avatar_image2"
         },
-        "content": "liked your thread",
+        "content": "Notification content",
         "created_at": "2024-03-21T10:00:00Z",
         "is_read": false
       }

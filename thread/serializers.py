@@ -1,11 +1,12 @@
 from rest_framework import serializers
-from .models import Thread, Comment, Like, LikeComment, Repost, RepostComment, Follow, Notification
+from .models import Thread, Comment, Like, LikeComment, Repost, RepostComment, Follow, Notification, ThreadImage
 from django.contrib.auth.models import User
+from accounts.serializers import UserSerializer
 
-class UserSerializer(serializers.ModelSerializer):
+class ThreadImageSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'email']
+        model = ThreadImage
+        fields = ['id', 'image']
 
 class CommentSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
@@ -33,6 +34,7 @@ class CommentSerializer(serializers.ModelSerializer):
 class ThreadSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     comments = CommentSerializer(many=True, read_only=True)
+    images = ThreadImageSerializer(many=True, read_only=True)
     likes_count = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
     reposts_count = serializers.SerializerMethodField()
@@ -41,7 +43,7 @@ class ThreadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Thread
         fields = ['id', 'content', 'user', 'created_at', 
-                 'comments', 'likes_count', 'is_liked',
+                 'comments', 'images', 'likes_count', 'is_liked',
                  'reposts_count', 'is_reposted', 'comment_count']
 
     def get_likes_count(self, obj):

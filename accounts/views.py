@@ -20,6 +20,7 @@ from .serializers import (
     UserSerializer, UserCreateSerializer, UserUpdateSerializer,
     ChangePasswordSerializer
 )
+from .models import MyUser
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -343,66 +344,40 @@ def profile_edit(request, id):
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
-    serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = UserSerializer
 
     def get_serializer_class(self):
         if self.action == 'create':
             return UserCreateSerializer
-        elif self.action in ['update', 'partial_update']:
+        elif self.action == 'update' or self.action == 'partial_update':
             return UserUpdateSerializer
         return UserSerializer
-
-    def get_permissions(self):
-        if self.action in ['create', 'login']:
-            return [permissions.AllowAny()]
-        return super().get_permissions()
-
-    @csrf_exempt
-    def create(self, request, *args, **kwargs):
-        return super().create(request, *args, **kwargs)
 
     @action(detail=False, methods=['get'])
     def me(self, request):
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 
-    @action(detail=False, methods=['post'])
-    def change_password(self, request):
-        serializer = ChangePasswordSerializer(data=request.data)
+    @action(detail=False, methods=['put', 'patch'])
+    def update_me(self, request):
+        user = request.user
+        serializer = UserUpdateSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
-            user = request.user
-            if not user.check_password(serializer.data.get('old_password')):
-                return Response(
-                    {'old_password': 'Wrong password.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            user.set_password(serializer.data.get('new_password'))
-            user.save()
-            return Response({'status': 'password changed'})
+            serializer.save()
+            # Return updated user data using UserSerializer
+            return Response(UserSerializer(user).data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['post'])
-    def login(self, request):
-        username = request.data.get('username')
-        password = request.data.get('password')
-        
-        if not username or not password:
-            return Response(
-                {'error': 'Please provide both username and password'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        user = authenticate(username=username, password=password)
-        
-        if user:
-            login(request, user)
-            serializer = self.get_serializer(user)
-            return Response({
-                'user': serializer.data
-            })
-        else:
-            return Response(
-                {'error': 'Invalid credentials'},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
+    def change_password(self, request):
+        user = request.user
+        serializer = ChangePasswordSerializer(data=request.data)
+        if serializer.is_valid():
+            if not user.check_password(serializer.data.get('old_password')):
+                return Response({'old_password': ['Wrong password.']}, 
+                             status=status.HTTP_400_BAD_REQUEST)
+            user.set_password(serializer.data.get('new_password'))
+            user.save()
+            return Response({'status': 'password set'})
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
