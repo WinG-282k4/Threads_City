@@ -14,7 +14,19 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
--- Dumping data for table threads_db.accounts_myuser: ~2 rows (approximately)
+-- Dumping structure for table threads_db.accounts_myuser
+CREATE TABLE IF NOT EXISTS `accounts_myuser` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `bio` varchar(200) DEFAULT NULL,
+  `profile_picture` varchar(100) DEFAULT NULL,
+  `user_id` int NOT NULL,
+  `link` varchar(64) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_id` (`user_id`),
+  CONSTRAINT `accounts_myuser_user_id_329909a6_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Dumping data for table threads_db.accounts_myuser: ~17 rows (approximately)
 INSERT INTO `accounts_myuser` (`id`, `bio`, `profile_picture`, `user_id`, `link`) VALUES
 	(1, NULL, '', 1, NULL),
 	(2, NULL, '', 2, 'Test avatar'),
@@ -34,9 +46,40 @@ INSERT INTO `accounts_myuser` (`id`, `bio`, `profile_picture`, `user_id`, `link`
 	(29, NULL, '', 20, NULL),
 	(30, NULL, '', 21, NULL);
 
+-- Dumping structure for table threads_db.auth_group
+CREATE TABLE IF NOT EXISTS `auth_group` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(150) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 -- Dumping data for table threads_db.auth_group: ~0 rows (approximately)
 
+-- Dumping structure for table threads_db.auth_group_permissions
+CREATE TABLE IF NOT EXISTS `auth_group_permissions` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `group_id` int NOT NULL,
+  `permission_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `auth_group_permissions_group_id_permission_id_0cd325b0_uniq` (`group_id`,`permission_id`),
+  KEY `auth_group_permissio_permission_id_84c5c92e_fk_auth_perm` (`permission_id`),
+  CONSTRAINT `auth_group_permissio_permission_id_84c5c92e_fk_auth_perm` FOREIGN KEY (`permission_id`) REFERENCES `auth_permission` (`id`),
+  CONSTRAINT `auth_group_permissions_group_id_b120cbf9_fk_auth_group_id` FOREIGN KEY (`group_id`) REFERENCES `auth_group` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 -- Dumping data for table threads_db.auth_group_permissions: ~0 rows (approximately)
+
+-- Dumping structure for table threads_db.auth_permission
+CREATE TABLE IF NOT EXISTS `auth_permission` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `content_type_id` int NOT NULL,
+  `codename` varchar(100) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `auth_permission_content_type_id_codename_01ab375a_uniq` (`content_type_id`,`codename`),
+  CONSTRAINT `auth_permission_content_type_id_2f476e4b_fk_django_co` FOREIGN KEY (`content_type_id`) REFERENCES `django_content_type` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=77 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping data for table threads_db.auth_permission: ~72 rows (approximately)
 INSERT INTO `auth_permission` (`id`, `name`, `content_type_id`, `codename`) VALUES
@@ -117,7 +160,24 @@ INSERT INTO `auth_permission` (`id`, `name`, `content_type_id`, `codename`) VALU
 	(75, 'Can delete profile', 19, 'delete_profile'),
 	(76, 'Can view profile', 19, 'view_profile');
 
--- Dumping data for table threads_db.auth_user: ~3 rows (approximately)
+-- Dumping structure for table threads_db.auth_user
+CREATE TABLE IF NOT EXISTS `auth_user` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `password` varchar(128) NOT NULL,
+  `last_login` datetime(6) DEFAULT NULL,
+  `is_superuser` tinyint(1) NOT NULL,
+  `username` varchar(150) NOT NULL,
+  `first_name` varchar(150) NOT NULL,
+  `last_name` varchar(150) NOT NULL,
+  `email` varchar(254) NOT NULL,
+  `is_staff` tinyint(1) NOT NULL,
+  `is_active` tinyint(1) NOT NULL,
+  `date_joined` datetime(6) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `username` (`username`)
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Dumping data for table threads_db.auth_user: ~17 rows (approximately)
 INSERT INTO `auth_user` (`id`, `password`, `last_login`, `is_superuser`, `username`, `first_name`, `last_name`, `email`, `is_staff`, `is_active`, `date_joined`) VALUES
 	(1, 'pbkdf2_sha256$600000$ORBc90SZH9b8qSMrotViSp$fM4gfx23yH7MhCmSj2xHhEcCOelQ7gq76XOTEc2wwWQ=', '2025-03-19 14:35:33.772342', 0, 'testuser', '', '', 'test@example.com', 0, 1, '2025-03-19 14:04:01.195295'),
 	(2, 'pbkdf2_sha256$600000$BJw0KG1VJ1awX1eqsHFOu6$BxT5WNHpvw8WzXPeYMhjKoeZ3zRw0RUE7UEjoWvSXaM=', '2025-03-20 12:04:08.259675', 0, 'testuser2', 'John', 'Doe', 'user@example.com', 0, 1, '2025-03-19 15:54:54.388729'),
@@ -137,11 +197,62 @@ INSERT INTO `auth_user` (`id`, `password`, `last_login`, `is_superuser`, `userna
 	(20, 'pbkdf2_sha256$600000$Nfmc9ehPrepmWHxV2pAYID$E47T0OIeuCd2rVIUEQOl0tS3ckUE8DFW1zkvBmoLGrU=', NULL, 0, 'newuserthanh6', 'John', 'Doe', 'user@example.com', 0, 1, '2025-03-21 03:42:46.748865'),
 	(21, 'pbkdf2_sha256$600000$3h8v3WiURGuWA9w7viG3ii$L/z86cpwvdLiFne48t13xV6yit+6bj5N1pjrJTbUrPk=', '2025-03-21 03:43:53.342644', 0, 'newuserthanh7', 'John', 'Doe', 'user@example.com', 0, 1, '2025-03-21 03:42:52.191155');
 
+-- Dumping structure for table threads_db.auth_user_groups
+CREATE TABLE IF NOT EXISTS `auth_user_groups` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `group_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `auth_user_groups_user_id_group_id_94350c0c_uniq` (`user_id`,`group_id`),
+  KEY `auth_user_groups_group_id_97559544_fk_auth_group_id` (`group_id`),
+  CONSTRAINT `auth_user_groups_group_id_97559544_fk_auth_group_id` FOREIGN KEY (`group_id`) REFERENCES `auth_group` (`id`),
+  CONSTRAINT `auth_user_groups_user_id_6a12ed8b_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 -- Dumping data for table threads_db.auth_user_groups: ~0 rows (approximately)
+
+-- Dumping structure for table threads_db.auth_user_user_permissions
+CREATE TABLE IF NOT EXISTS `auth_user_user_permissions` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `permission_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `auth_user_user_permissions_user_id_permission_id_14a6b632_uniq` (`user_id`,`permission_id`),
+  KEY `auth_user_user_permi_permission_id_1fbb5f2c_fk_auth_perm` (`permission_id`),
+  CONSTRAINT `auth_user_user_permi_permission_id_1fbb5f2c_fk_auth_perm` FOREIGN KEY (`permission_id`) REFERENCES `auth_permission` (`id`),
+  CONSTRAINT `auth_user_user_permissions_user_id_a95ead1b_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping data for table threads_db.auth_user_user_permissions: ~0 rows (approximately)
 
+-- Dumping structure for table threads_db.django_admin_log
+CREATE TABLE IF NOT EXISTS `django_admin_log` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `action_time` datetime(6) NOT NULL,
+  `object_id` longtext,
+  `object_repr` varchar(200) NOT NULL,
+  `action_flag` smallint unsigned NOT NULL,
+  `change_message` longtext NOT NULL,
+  `content_type_id` int DEFAULT NULL,
+  `user_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `django_admin_log_content_type_id_c4bce8eb_fk_django_co` (`content_type_id`),
+  KEY `django_admin_log_user_id_c564eba6_fk_auth_user_id` (`user_id`),
+  CONSTRAINT `django_admin_log_content_type_id_c4bce8eb_fk_django_co` FOREIGN KEY (`content_type_id`) REFERENCES `django_content_type` (`id`),
+  CONSTRAINT `django_admin_log_user_id_c564eba6_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`),
+  CONSTRAINT `django_admin_log_chk_1` CHECK ((`action_flag` >= 0))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 -- Dumping data for table threads_db.django_admin_log: ~0 rows (approximately)
+
+-- Dumping structure for table threads_db.django_content_type
+CREATE TABLE IF NOT EXISTS `django_content_type` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `app_label` varchar(100) NOT NULL,
+  `model` varchar(100) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `django_content_type_app_label_model_76bd3d3b_uniq` (`app_label`,`model`)
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping data for table threads_db.django_content_type: ~18 rows (approximately)
 INSERT INTO `django_content_type` (`id`, `app_label`, `model`) VALUES
@@ -164,6 +275,15 @@ INSERT INTO `django_content_type` (`id`, `app_label`, `model`) VALUES
 	(1, 'thread', 'thread'),
 	(6, 'thread', 'threadimage'),
 	(18, 'thumbnail', 'kvstore');
+
+-- Dumping structure for table threads_db.django_migrations
+CREATE TABLE IF NOT EXISTS `django_migrations` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `app` varchar(255) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `applied` datetime(6) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=46 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping data for table threads_db.django_migrations: ~42 rows (approximately)
 INSERT INTO `django_migrations` (`id`, `app`, `name`, `applied`) VALUES
@@ -213,7 +333,16 @@ INSERT INTO `django_migrations` (`id`, `app`, `name`, `applied`) VALUES
 	(44, 'accounts', '0006_alter_profile_avatar_alter_profile_user', '2025-03-20 12:22:32.182065'),
 	(45, 'accounts', '0007_delete_profile', '2025-03-20 12:31:14.267880');
 
--- Dumping data for table threads_db.django_session: ~5 rows (approximately)
+-- Dumping structure for table threads_db.django_session
+CREATE TABLE IF NOT EXISTS `django_session` (
+  `session_key` varchar(40) NOT NULL,
+  `session_data` longtext NOT NULL,
+  `expire_date` datetime(6) NOT NULL,
+  PRIMARY KEY (`session_key`),
+  KEY `django_session_expire_date_a5c62663` (`expire_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Dumping data for table threads_db.django_session: ~7 rows (approximately)
 INSERT INTO `django_session` (`session_key`, `session_data`, `expire_date`) VALUES
 	('18jmmwhlnlx6mo8um047683eicvm485i', '.eJxVjDsOwjAQBe_iGllrr7MbU9LnDJZ_IQFkS3FSIe5OIqWA9s3Mewvnt3VyW8uLm5O4Cq3E5XcMPj5zOUh6-HKvMtayLnOQhyJP2uRQU37dTvfvYPJt2usOiChBZylkHG1mNjqyHRUB99SlyBqSNYhG75QA1cjQMyKo3noM4vMF08U2bw:1tvTIX:txtRmwR5rLJXJX38EUGcj1yQM7F-An9USKAWwCIm_z4', '2025-04-04 03:43:53.351655'),
 	('77psqj6aoeedlaif5yzh38j7f9tcmnf2', '.eJxVjMsOwiAQRf-FtSEwFCwu3fcbmmFmkKqBpI-V8d-1SRe6veec-1IjbmsZt0XmcWJ1UaBOv1tCekjdAd-x3pqmVtd5SnpX9EEXPTSW5_Vw_w4KLuVbGw4-uOgNgQBHhowcz9Y7pJANuD77zrBQiEDWAMZoBZPtJWDuJJF6fwDY3jgr:1tvBJM:--anW-sWNU6uOOxo1p2Ge_Ah9x0Md1IZfJVq3iLPMOM', '2025-04-03 08:31:32.449108'),
@@ -223,7 +352,29 @@ INSERT INTO `django_session` (`session_key`, `session_data`, `expire_date`) VALU
 	('tgklk6waabyol4flbqc3305t3ud5iacx', '.eJxVjMsOwiAQRf-FtSEwFCwu3fcbmmFmkKqBpI-V8d-1SRe6veec-1IjbmsZt0XmcWJ1UaBOv1tCekjdAd-x3pqmVtd5SnpX9EEXPTSW5_Vw_w4KLuVbGw4-uOgNgQBHhowcz9Y7pJANuD77zrBQiEDWAMZoBZPtJWDuJJF6fwDY3jgr:1tvEd6:Ay0WvZSW4yfD2P-K1yHMzTZPGMU2ZMCgsEH53obe3CA', '2025-04-03 12:04:08.269638'),
 	('ww0850enoy4eo5n8p9tm4xqc1i2ik6vi', '.eJxVjMsOwiAQRf-FtSEwFCwu3fcbmmFmkKqBpI-V8d-1SRe6veec-1IjbmsZt0XmcWJ1UaBOv1tCekjdAd-x3pqmVtd5SnpX9EEXPTSW5_Vw_w4KLuVbGw4-uOgNgQBHhowcz9Y7pJANuD77zrBQiEDWAMZoBZPtJWDuJJF6fwDY3jgr:1tvCSG:pvicz7GleUJu9kG4rr2cDjWjz6DTdMYLMarC-mtRV5I', '2025-04-03 09:44:48.535307');
 
--- Dumping data for table threads_db.thread_comment: ~8 rows (approximately)
+-- Dumping structure for table threads_db.thread_comment
+CREATE TABLE IF NOT EXISTS `thread_comment` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `created_at` datetime(6) NOT NULL,
+  `updated_at` datetime(6) NOT NULL,
+  `thread_id` bigint NOT NULL,
+  `user_id` int NOT NULL,
+  `comment_count` int unsigned NOT NULL,
+  `likes_count` int unsigned NOT NULL,
+  `content` longtext NOT NULL DEFAULT (_utf8mb3''),
+  `parent_comment_id` bigint DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `thread_comment_thread_id_e2158965_fk_thread_thread_id` (`thread_id`),
+  KEY `thread_comment_user_id_8f428d53_fk_auth_user_id` (`user_id`),
+  KEY `thread_comment_parent_comment_id_12ee5cf8_fk_thread_comment_id` (`parent_comment_id`),
+  CONSTRAINT `thread_comment_parent_comment_id_12ee5cf8_fk_thread_comment_id` FOREIGN KEY (`parent_comment_id`) REFERENCES `thread_comment` (`id`),
+  CONSTRAINT `thread_comment_thread_id_e2158965_fk_thread_thread_id` FOREIGN KEY (`thread_id`) REFERENCES `thread_thread` (`id`),
+  CONSTRAINT `thread_comment_user_id_8f428d53_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`),
+  CONSTRAINT `thread_comment_chk_1` CHECK ((`comment_count` >= 0)),
+  CONSTRAINT `thread_comment_chk_2` CHECK ((`likes_count` >= 0))
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Dumping data for table threads_db.thread_comment: ~16 rows (approximately)
 INSERT INTO `thread_comment` (`id`, `created_at`, `updated_at`, `thread_id`, `user_id`, `comment_count`, `likes_count`, `content`, `parent_comment_id`) VALUES
 	(1, '2025-03-19 14:47:52.271185', '2025-03-19 15:11:35.062698', 2, 1, 1, 1, 'Comment bài viết 2', NULL),
 	(2, '2025-03-19 14:49:11.718335', '2025-03-19 14:49:11.718335', 2, 1, 0, 0, 'Comment bài viết 2', NULL),
@@ -243,12 +394,50 @@ INSERT INTO `thread_comment` (`id`, `created_at`, `updated_at`, `thread_id`, `us
 	(20, '2025-03-21 03:49:35.245438', '2025-03-21 03:49:35.245438', 9, 21, 0, 0, 'test lại rep cmt thread 9', 19),
 	(21, '2025-03-21 03:59:21.587547', '2025-03-21 03:59:21.587547', 10, 21, 0, 0, 'test lại respone thread mới', NULL);
 
+-- Dumping structure for table threads_db.thread_commentimage
+CREATE TABLE IF NOT EXISTS `thread_commentimage` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `image` varchar(100) NOT NULL,
+  `comment_id` bigint NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `thread_commentimage_comment_id_a09cb0d1_fk_thread_comment_id` (`comment_id`),
+  CONSTRAINT `thread_commentimage_comment_id_a09cb0d1_fk_thread_comment_id` FOREIGN KEY (`comment_id`) REFERENCES `thread_comment` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 -- Dumping data for table threads_db.thread_commentimage: ~0 rows (approximately)
+
+-- Dumping structure for table threads_db.thread_follow
+CREATE TABLE IF NOT EXISTS `thread_follow` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `created_at` datetime(6) NOT NULL,
+  `updated_at` datetime(6) NOT NULL,
+  `followed_id` int NOT NULL,
+  `follower_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_following` (`follower_id`,`followed_id`),
+  KEY `thread_follow_followed_id_ad2bd1b9_fk_auth_user_id` (`followed_id`),
+  CONSTRAINT `thread_follow_followed_id_ad2bd1b9_fk_auth_user_id` FOREIGN KEY (`followed_id`) REFERENCES `auth_user` (`id`),
+  CONSTRAINT `thread_follow_follower_id_ab06e67f_fk_auth_user_id` FOREIGN KEY (`follower_id`) REFERENCES `auth_user` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping data for table threads_db.thread_follow: ~2 rows (approximately)
 INSERT INTO `thread_follow` (`id`, `created_at`, `updated_at`, `followed_id`, `follower_id`) VALUES
 	(1, '2025-03-20 09:39:07.762590', '2025-03-20 09:39:07.762590', 2, 3),
 	(7, '2025-03-21 04:00:18.530447', '2025-03-21 04:00:18.530447', 2, 21);
+
+-- Dumping structure for table threads_db.thread_like
+CREATE TABLE IF NOT EXISTS `thread_like` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `created_at` datetime(6) NOT NULL,
+  `updated_at` datetime(6) NOT NULL,
+  `thread_id` bigint NOT NULL,
+  `user_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_like` (`user_id`,`thread_id`),
+  KEY `thread_like_thread_id_b7aaf092_fk_thread_thread_id` (`thread_id`),
+  CONSTRAINT `thread_like_thread_id_b7aaf092_fk_thread_thread_id` FOREIGN KEY (`thread_id`) REFERENCES `thread_thread` (`id`),
+  CONSTRAINT `thread_like_user_id_d4260ebb_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping data for table threads_db.thread_like: ~3 rows (approximately)
 INSERT INTO `thread_like` (`id`, `created_at`, `updated_at`, `thread_id`, `user_id`) VALUES
@@ -257,11 +446,41 @@ INSERT INTO `thread_like` (`id`, `created_at`, `updated_at`, `thread_id`, `user_
 	(4, '2025-03-20 09:03:02.398763', '2025-03-20 09:03:02.398763', 2, 3),
 	(6, '2025-03-21 03:47:38.099152', '2025-03-21 03:47:38.099152', 9, 21);
 
+-- Dumping structure for table threads_db.thread_likecomment
+CREATE TABLE IF NOT EXISTS `thread_likecomment` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `created_at` datetime(6) NOT NULL,
+  `updated_at` datetime(6) NOT NULL,
+  `comment_id` bigint NOT NULL,
+  `user_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_like_comment` (`user_id`,`comment_id`),
+  KEY `thread_likecomment_comment_id_c4e9e65c_fk_thread_comment_id` (`comment_id`),
+  CONSTRAINT `thread_likecomment_comment_id_c4e9e65c_fk_thread_comment_id` FOREIGN KEY (`comment_id`) REFERENCES `thread_comment` (`id`),
+  CONSTRAINT `thread_likecomment_user_id_1a42e7f1_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 -- Dumping data for table threads_db.thread_likecomment: ~1 rows (approximately)
 INSERT INTO `thread_likecomment` (`id`, `created_at`, `updated_at`, `comment_id`, `user_id`) VALUES
 	(1, '2025-03-19 15:05:23.917926', '2025-03-19 15:05:23.917926', 1, 1);
 
--- Dumping data for table threads_db.thread_notification: ~12 rows (approximately)
+-- Dumping structure for table threads_db.thread_notification
+CREATE TABLE IF NOT EXISTS `thread_notification` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `type` varchar(32) NOT NULL,
+  `content` varchar(64) NOT NULL,
+  `is_read` tinyint(1) NOT NULL,
+  `created_at` datetime(6) NOT NULL,
+  `actioner_id` int NOT NULL,
+  `user_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `thread_notification_actioner_id_44473af4_fk_auth_user_id` (`actioner_id`),
+  KEY `thread_notification_user_id_e6c0b9f4_fk_auth_user_id` (`user_id`),
+  CONSTRAINT `thread_notification_actioner_id_44473af4_fk_auth_user_id` FOREIGN KEY (`actioner_id`) REFERENCES `auth_user` (`id`),
+  CONSTRAINT `thread_notification_user_id_e6c0b9f4_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Dumping data for table threads_db.thread_notification: ~22 rows (approximately)
 INSERT INTO `thread_notification` (`id`, `type`, `content`, `is_read`, `created_at`, `actioner_id`, `user_id`) VALUES
 	(1, 'like_thread', 'newuser likes your thread: Bài viết test mới...', 0, '2025-03-20 08:55:21.175144', 3, 1),
 	(2, 'repost_thread', 'newuser reposted your thread: Bài viết test mới...', 0, '2025-03-20 08:57:01.662092', 3, 1),
@@ -288,15 +507,59 @@ INSERT INTO `thread_notification` (`id`, `type`, `content`, `is_read`, `created_
 	(23, 'comment', 'newuserthanh7 reply to your thread: test lại đăng post...', 0, '2025-03-21 03:59:21.591904', 21, 3),
 	(24, 'follow', 'newuserthanh7 started following you.', 0, '2025-03-21 04:00:18.533471', 21, 2);
 
+-- Dumping structure for table threads_db.thread_repost
+CREATE TABLE IF NOT EXISTS `thread_repost` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `created_at` datetime(6) NOT NULL,
+  `updated_at` datetime(6) NOT NULL,
+  `thread_id` bigint NOT NULL,
+  `user_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_repost_thread` (`user_id`,`thread_id`),
+  KEY `thread_rethread_thread_id_0b887946_fk_thread_thread_id` (`thread_id`),
+  CONSTRAINT `thread_rethread_thread_id_0b887946_fk_thread_thread_id` FOREIGN KEY (`thread_id`) REFERENCES `thread_thread` (`id`),
+  CONSTRAINT `thread_rethread_user_id_ab9ac327_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 -- Dumping data for table threads_db.thread_repost: ~0 rows (approximately)
 INSERT INTO `thread_repost` (`id`, `created_at`, `updated_at`, `thread_id`, `user_id`) VALUES
 	(1, '2025-03-20 08:57:01.660376', '2025-03-20 08:57:01.660376', 2, 3);
+
+-- Dumping structure for table threads_db.thread_repostcomment
+CREATE TABLE IF NOT EXISTS `thread_repostcomment` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `created_at` datetime(6) NOT NULL,
+  `updated_at` datetime(6) NOT NULL,
+  `comment_id` bigint NOT NULL,
+  `user_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_repost_comment` (`user_id`,`comment_id`),
+  KEY `thread_repostcomment_comment_id_558671ff_fk_thread_comment_id` (`comment_id`),
+  CONSTRAINT `thread_repostcomment_comment_id_558671ff_fk_thread_comment_id` FOREIGN KEY (`comment_id`) REFERENCES `thread_comment` (`id`),
+  CONSTRAINT `thread_repostcomment_user_id_4681f828_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping data for table threads_db.thread_repostcomment: ~0 rows (approximately)
 INSERT INTO `thread_repostcomment` (`id`, `created_at`, `updated_at`, `comment_id`, `user_id`) VALUES
 	(1, '2025-03-20 09:23:04.801919', '2025-03-20 09:23:04.801919', 6, 3);
 
--- Dumping data for table threads_db.thread_thread: ~9 rows (approximately)
+-- Dumping structure for table threads_db.thread_thread
+CREATE TABLE IF NOT EXISTS `thread_thread` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `likes_count` int unsigned NOT NULL,
+  `comment_count` int unsigned NOT NULL,
+  `created_at` datetime(6) NOT NULL,
+  `updated_at` datetime(6) NOT NULL,
+  `user_id` int NOT NULL,
+  `content` longtext NOT NULL DEFAULT (_utf8mb3''),
+  PRIMARY KEY (`id`),
+  KEY `thread_thread_user_id_0998f8cf_fk_auth_user_id` (`user_id`),
+  CONSTRAINT `thread_thread_user_id_0998f8cf_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`),
+  CONSTRAINT `thread_thread_chk_2` CHECK ((`likes_count` >= 0)),
+  CONSTRAINT `thread_thread_comment_count_eeffde51_check` CHECK ((`comment_count` >= 0))
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Dumping data for table threads_db.thread_thread: ~13 rows (approximately)
 INSERT INTO `thread_thread` (`id`, `likes_count`, `comment_count`, `created_at`, `updated_at`, `user_id`, `content`) VALUES
 	(2, 2, 3, '2025-03-19 14:46:48.252325', '2025-03-20 09:03:02.402481', 1, 'Bài viết test mới'),
 	(3, 0, 0, '2025-03-20 08:54:31.071790', '2025-03-20 08:54:31.071790', 3, 'Cursor mạnh quá'),
@@ -312,7 +575,17 @@ INSERT INTO `thread_thread` (`id`, `likes_count`, `comment_count`, `created_at`,
 	(13, 0, 0, '2025-03-21 02:52:55.090665', '2025-03-21 02:52:55.090665', 3, 'Test lưu link ảnh 2'),
 	(14, 0, 0, '2025-03-21 03:57:51.301720', '2025-03-21 03:57:51.301720', 21, 'test lại respone thread mới');
 
--- Dumping data for table threads_db.thread_threadimage: ~0 rows (approximately)
+-- Dumping structure for table threads_db.thread_threadimage
+CREATE TABLE IF NOT EXISTS `thread_threadimage` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `image` varchar(100) NOT NULL,
+  `thread_id` bigint NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `thread_imagethread_thread_id_a5897670_fk_thread_thread_id` (`thread_id`),
+  CONSTRAINT `thread_imagethread_thread_id_a5897670_fk_thread_thread_id` FOREIGN KEY (`thread_id`) REFERENCES `thread_thread` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Dumping data for table threads_db.thread_threadimage: ~7 rows (approximately)
 INSERT INTO `thread_threadimage` (`id`, `image`, `thread_id`) VALUES
 	(1, 'thread_images/chị_gào_thét_chỉ_con_mèo.webp', 9),
 	(2, 'https://example.com/image1.jpg', 11),
@@ -322,6 +595,13 @@ INSERT INTO `thread_threadimage` (`id`, `image`, `thread_id`) VALUES
 	(6, 'https://example.com/image1.jpg', 13),
 	(7, 'https://example.com/image2.jpg', 13),
 	(8, 'https://example.com/image1.jpg', 14);
+
+-- Dumping structure for table threads_db.thumbnail_kvstore
+CREATE TABLE IF NOT EXISTS `thumbnail_kvstore` (
+  `key` varchar(200) NOT NULL,
+  `value` longtext NOT NULL,
+  PRIMARY KEY (`key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping data for table threads_db.thumbnail_kvstore: ~0 rows (approximately)
 
