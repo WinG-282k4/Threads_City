@@ -8,6 +8,7 @@ from django.db.models import Q
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework import serializers
 
 from .models import (
     Thread,
@@ -18,12 +19,16 @@ from .models import (
     RepostComment,
     Follow,
     Notification,
+    ThreadImage,
+    CommentImage,
 )
 from .utils import (
     create_thread_post,
     create_thread_images,
     create_cmt,
     create_cmt_images,
+    success_response,
+    check_toxic_content,
 )
 from .serializers import (
     ThreadSerializer, CommentSerializer, FollowSerializer,
@@ -535,14 +540,34 @@ def check_reddot(request):
 
 
 class ThreadViewSet(viewsets.ModelViewSet):
+    queryset = Thread.objects.all()
     serializer_class = ThreadSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def get_queryset(self):
-        return Thread.objects.all().order_by('-created_at')
-
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        # Check toxic content before creating thread
+        content = serializer.validated_data.get('content', '')
+        if check_toxic_content(content):
+            raise serializers.ValidationError({
+                'status': 'error',
+                'errors': {
+                    'content': 'Bài viết của bạn vi phạm tiêu chuẩn cộng đồng'
+                }
+            })
+            
+        # Create thread if content is safe
+        thread = serializer.save(user=self.request.user)
+        
+        # Handle images if provided
+        images = self.request.data.get('images', [])
+        for img in images:
+            thread_img = ThreadImage(thread=thread, image=img)
+            thread_img.save()
+            
+        return Response({
+            'status': 'success',
+            'data': ThreadSerializer(thread).data
+        })
 
     @action(detail=False, methods=['get'])
     def feed(self, request):

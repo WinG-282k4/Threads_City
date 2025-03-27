@@ -43,6 +43,10 @@ List and get operations return data directly without status wrapper:
 }
 ```
 
+### Content Moderation
+
+The API includes automatic content moderation for threads and comments. When creating a thread or comment, the content is checked against a toxicity detection API. If the content is flagged as toxic, the creation will be rejected with an appropriate error message.
+
 ### 1. Authentication APIs (`/api/auth/users/`)
 
 #### User Registration
@@ -60,6 +64,9 @@ List and get operations return data directly without status wrapper:
     "last_name": "Doe"
   }
   ```
+
+````
+
 - **Success Response**:
   ```json
   {
@@ -73,7 +80,7 @@ List and get operations return data directly without status wrapper:
       "avatar": "url_to_avatar_image"
     }
   }
-  ```
+````
 
 #### User Login
 
@@ -86,6 +93,8 @@ List and get operations return data directly without status wrapper:
     "password": "password"
   }
   ```
+
+````
 - **Success Response**:
   ```json
   {
@@ -100,7 +109,7 @@ List and get operations return data directly without status wrapper:
       "avatar": "url_to_avatar_image"
     }
   }
-  ```
+````
 
 #### Get Current User
 
@@ -119,6 +128,8 @@ List and get operations return data directly without status wrapper:
   }
   ```
 
+````
+
 #### Update Current User
 
 - **Endpoint**: `PUT/PATCH /api/auth/users/update_me/`
@@ -132,7 +143,8 @@ List and get operations return data directly without status wrapper:
     "avatar": "new_avatar_link",
     "bio": "New bio text"
   }
-  ```
+````
+
 - **Success Response**:
   ```json
   {
@@ -149,6 +161,8 @@ List and get operations return data directly without status wrapper:
   }
   ```
 
+````
+
 #### Change Password
 
 - **Endpoint**: `POST /api/auth/users/change_password/`
@@ -160,7 +174,8 @@ List and get operations return data directly without status wrapper:
     "new_password": "newpassword",
     "new_password2": "newpassword"
   }
-  ```
+````
+
 - **Success Response**:
   ```json
   {
@@ -170,6 +185,8 @@ List and get operations return data directly without status wrapper:
     }
   }
   ```
+
+````
 
 #### Search Users
 
@@ -195,7 +212,7 @@ List and get operations return data directly without status wrapper:
       }
     ]
   }
-  ```
+````
 
 #### Get User Details
 
@@ -212,6 +229,8 @@ List and get operations return data directly without status wrapper:
     "avatar": "url_to_avatar_image"
   }
   ```
+
+````
 
 ### 2. Thread APIs (`/api/threads/`)
 
@@ -254,7 +273,7 @@ List and get operations return data directly without status wrapper:
       }
     ]
   }
-  ```
+````
 
 #### Get Thread Feed: giống với `GET /api/threads/` nhưng chỉ có thể đọc
 
@@ -282,34 +301,53 @@ List and get operations return data directly without status wrapper:
     ]
   }
   ```
+
+````
 - **Success Response**:
   ```json
   {
-    "id": 14,
-    "content": "test lại respone thread mới",
-    "user": {
-      "id": 21,
-      "username": "newuserthanh7",
-      "email": "user@example.com",
-      "first_name": "John",
-      "last_name": "Doe",
-      "date_joined": "2025-03-21T10:12:52.191155+06:30",
-      "avatar": null
-    },
-    "created_at": "2025-03-21T10:27:51.301720+06:30",
-    "thread_images": [
-      {
-        "id": 8,
-        "image": "https://example.com/image1.jpg"
-      }
-    ],
-    "likes_count": 0,
-    "is_liked": false,
-    "reposts_count": 0,
-    "is_reposted": false,
-    "comment_count": 0
+    "status": "success",
+    "data": {
+      "id": 1,
+      "content": "Thread content",
+      "user": {
+        "id": 1,
+        "username": "username",
+        "first_name": "First",
+        "last_name": "Last",
+        "avatar": "url_to_avatar_image"
+      },
+      "images": [
+        {
+          "id": 1,
+          "image": "https://example.com/image1.jpg"
+        },
+        {
+          "id": 2,
+          "image": "https://example.com/image2.jpg"
+        }
+      ],
+      "created_at": "2024-03-21T10:00:00Z",
+      "likes_count": 0,
+      "is_liked": false,
+      "reposts_count": 0,
+      "is_reposted": false,
+      "comment_count": 0
+    }
+  }
+````
+
+- **Error Response (Toxic Content)**:
+  ```json
+  {
+    "status": "error",
+    "errors": {
+      "content": "Bài viết của bạn vi phạm tiêu chuẩn cộng đồng"
+    }
   }
   ```
+
+````
 
 #### Like/Unlike Thread
 
@@ -321,7 +359,7 @@ List and get operations return data directly without status wrapper:
     "likes_count": 6,
     "is_liked": true
   }
-  ```
+````
 
 #### Repost/Unrepost Thread
 
@@ -334,6 +372,8 @@ List and get operations return data directly without status wrapper:
     "is_reposted": true
   }
   ```
+
+````
 
 ### 3. Comment APIs (`/api/threads/{thread_id}/comments/`)
 
@@ -366,7 +406,7 @@ List and get operations return data directly without status wrapper:
       }
     ]
   }
-  ```
+````
 
 #### Get Replies for a Comment
 
@@ -406,6 +446,8 @@ List and get operations return data directly without status wrapper:
     "parent_comment_id": null
   }
   ```
+
+````
 - **Success Response**:
   ```json
   {
@@ -425,7 +467,7 @@ List and get operations return data directly without status wrapper:
     "is_liked": false,
     "replies_count": 0
   }
-  ```
+````
 
 #### Like/Unlike Comment
 
@@ -439,6 +481,8 @@ List and get operations return data directly without status wrapper:
   }
   ```
 
+````
+
 #### Repost/Unrepost Comment
 
 - **Endpoint**: `POST /api/threads/{thread_id}/comments/{comment_id}/repost/`
@@ -449,7 +493,7 @@ List and get operations return data directly without status wrapper:
     "reposts_count": 4,
     "is_reposted": true
   }
-  ```
+````
 
 ### 4. Follow APIs (`/api/follows/`)
 
@@ -489,6 +533,8 @@ List and get operations return data directly without status wrapper:
   }
   ```
 
+````
+
 #### Follow/Unfollow User
 
 - **Endpoint**: `POST /api/follows/`
@@ -498,7 +544,8 @@ List and get operations return data directly without status wrapper:
   {
     "followed_id": 2
   }
-  ```
+````
+
 - **Success Response**:
   ```json
   {
@@ -526,6 +573,8 @@ List and get operations return data directly without status wrapper:
   }
   ```
 
+````
+
 #### Get Followers Count
 
 - **Endpoint**: `GET /api/follows/followers_count/`
@@ -535,7 +584,7 @@ List and get operations return data directly without status wrapper:
   {
     "count": 123
   }
-  ```
+````
 
 ### 5. Notification APIs (`/api/notifications/`)
 
@@ -577,6 +626,8 @@ List and get operations return data directly without status wrapper:
   }
   ```
 
+````
+
 #### Get Unread Notification Count
 
 - **Endpoint**: `GET /api/notifications/unread_count/`
@@ -586,7 +637,7 @@ List and get operations return data directly without status wrapper:
   {
     "count": 5
   }
-  ```
+````
 
 #### Mark Notification as Read
 
@@ -600,6 +651,8 @@ List and get operations return data directly without status wrapper:
   }
   ```
 
+````
+
 #### Mark All Notifications as Read
 
 - **Endpoint**: `POST /api/notifications/mark_all_read/`
@@ -609,7 +662,7 @@ List and get operations return data directly without status wrapper:
   {
     "message": "All notifications marked as read"
   }
-  ```
+````
 
 #### Get Unread Notifications
 
@@ -657,6 +710,8 @@ Authentication methods supported:
   }
   ```
 
+````
+
 ### Pagination
 
 - Default: 10 items per page
@@ -668,7 +723,7 @@ Authentication methods supported:
 {
   "detail": "Error message here"
 }
-```
+````
 
 Status codes:
 
