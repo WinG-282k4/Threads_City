@@ -557,17 +557,7 @@ class ThreadViewSet(viewsets.ModelViewSet):
             
         # Create thread if content is safe
         thread = serializer.save(user=self.request.user)
-        
-        # Handle images if provided
-        images = self.request.data.get('images', [])
-        for img in images:
-            thread_img = ThreadImage(thread=thread, image=img)
-            thread_img.save()
-            
-        return Response({
-            'status': 'success',
-            'data': ThreadSerializer(thread).data
-        })
+        return thread
 
     @action(detail=False, methods=['get'])
     def feed(self, request):

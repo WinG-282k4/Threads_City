@@ -306,34 +306,27 @@ The API includes automatic content moderation for threads and comments. When cre
 - **Success Response**:
   ```json
   {
-    "status": "success",
-    "data": {
+    "id": 1,
+    "content": "Thread content",
+    "user": {
       "id": 1,
-      "content": "Thread content",
-      "user": {
+      "username": "username",
+      "first_name": "First",
+      "last_name": "Last",
+      "avatar": "url_to_avatar_image"
+    },
+    "images": [
+      {
         "id": 1,
-        "username": "username",
-        "first_name": "First",
-        "last_name": "Last",
-        "avatar": "url_to_avatar_image"
-      },
-      "images": [
-        {
-          "id": 1,
-          "image": "https://example.com/image1.jpg"
-        },
-        {
-          "id": 2,
-          "image": "https://example.com/image2.jpg"
-        }
-      ],
-      "created_at": "2024-03-21T10:00:00Z",
-      "likes_count": 0,
-      "is_liked": false,
-      "reposts_count": 0,
-      "is_reposted": false,
-      "comment_count": 0
-    }
+        "image": "https://example.com/image1.jpg"
+      }
+    ],
+    "created_at": "2024-03-21T10:00:00Z",
+    "likes_count": 0,
+    "is_liked": false,
+    "reposts_count": 0,
+    "is_reposted": false,
+    "comment_count": 0
   }
 ````
 
