@@ -15,13 +15,20 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import JsonResponse
 
+def custom_404(request):
+    return JsonResponse({
+        "status": "error",
+        "message": "Endpoint không tồn tại. Vui lòng kiểm tra lại URL."
+    }, status=404)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('thread.urls')),
     path('api/auth/', include('accounts.urls')),
+    re_path(r'^.*$', custom_404),  # Catch all URLs
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
