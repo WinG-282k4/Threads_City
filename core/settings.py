@@ -185,9 +185,43 @@ REST_FRAMEWORK = {
 }
 
 # CORS settings
-CORS_ALLOW_ALL_ORIGINS = True  # Chỉ dùng trong development
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # Frontend development server
+    "http://127.0.0.1:5173",
+    "https://wing2k4.pythonanywhere.com",
+    "http://wing2k4.pythonanywhere.com"
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 
 # CSRF settings
 CSRF_EXEMPT_URLS = [
     '/api/users/',  # Registration endpoint
 ]
+
+# Cookie settings
+SESSION_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SECURE = True
