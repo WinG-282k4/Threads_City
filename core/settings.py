@@ -189,7 +189,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # Frontend development server
     "http://127.0.0.1:5173",
     "https://wing2k4.pythonanywhere.com",
-    "http://wing2k4.pythonanywhere.com"
+    "http://wing2k4.pythonanywhere.com",
+    "https://www.postman.com"  # Add Postman
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -216,8 +217,20 @@ CORS_ALLOW_HEADERS = [
 ]
 
 # CSRF settings
+CSRF_TRUSTED_ORIGINS = [
+    'https://wing2k4.pythonanywhere.com',
+    'http://wing2k4.pythonanywhere.com',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'https://www.postman.com'  # Add Postman
+]
+
+# CSRF settings for API
 CSRF_EXEMPT_URLS = [
     '/api/users/',  # Registration endpoint
+    '/api/threads/',  # Thread endpoints
+    '/api/threads/*/like/',
+    '/api/threads/*/repost/',
 ]
 
 # Cookie settings
