@@ -581,6 +581,65 @@ class ThreadViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['get'])
+    def my_threads(self, request):
+        """Lấy thread do user tạo"""
+        queryset = Thread.objects.filter(user=request.user)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def my_commented_threads(self, request):
+        """Lấy thread mà user đã comment"""
+        # Lấy các thread mà user đã comment
+        commented_thread_ids = Comment.objects.filter(user=request.user).values_list('thread_id', flat=True).distinct()
+        queryset = Thread.objects.filter(id__in=commented_thread_ids).exclude(user=request.user)  # Loại bỏ thread của chính user
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def my_reposted_threads(self, request):
+        """Lấy thread mà user đã repost"""
+        queryset = request.user.reposted_threads.all()
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def user_threads(self, request):
+        user_id = request.query_params.get('user_id')
+        if not user_id:
+            return Response({'error': 'user_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            user = User.objects.get(id=user_id)
+            # Lấy thread của user
+            user_threads = Thread.objects.filter(user=user)
+            # Lấy thread đã repost
+            reposted_threads = user.reposted_threads.all()
+            # Kết hợp và sắp xếp theo thời gian
+            queryset = (user_threads | reposted_threads).distinct().order_by('-created_at')
+            
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
     @action(detail=True, methods=['post'])
     def like(self, request, pk=None):
         thread = self.get_object()

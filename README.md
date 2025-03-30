@@ -273,7 +273,7 @@ The API includes automatic content moderation for threads and comments. When cre
       }
     ]
   }
-````
+  ```
 
 #### Get Thread Feed: giống với `GET /api/threads/` nhưng chỉ có thể đọc
 
@@ -286,6 +286,43 @@ The API includes automatic content moderation for threads and comments. When cre
 - **Endpoint**: `GET /api/threads/following_feed/`
 - **Authentication**: Required
 - **Query Params**: `?page=1` (pagination)
+
+#### Get My Threads
+
+- **Endpoint**: `GET /api/threads/my_threads/`
+- **Authentication**: Required
+- **Query Params**: `?page=1` (pagination)
+- **Description**: Lấy tất cả thread do user hiện tại tạo
+- **Response**: Giống format của Get All Threads
+
+#### Get My Commented Threads
+
+- **Endpoint**: `GET /api/threads/my_commented_threads/`
+- **Authentication**: Required
+- **Query Params**: `?page=1` (pagination)
+- **Description**: Lấy tất cả thread mà user hiện tại đã comment (không bao gồm thread do user tạo)
+- **Response**: Giống format của Get All Threads
+
+#### Get My Reposted Threads
+
+- **Endpoint**: `GET /api/threads/my_reposted_threads/`
+- **Authentication**: Required
+- **Query Params**: `?page=1` (pagination)
+- **Description**: Lấy tất cả thread mà user hiện tại đã repost
+- **Response**: Giống format của Get All Threads
+
+#### Get User Threads
+
+- **Endpoint**: `GET /api/threads/user_threads/`
+- **Authentication**: Required
+- **Query Params**:
+  - `user_id`: ID của user cần lấy thread
+  - `page`: Số trang (pagination)
+- **Description**: Lấy tất cả thread của một user (bao gồm cả thread do user tạo và thread user đã repost)
+- **Response**: Giống format của Get All Threads
+- **Error Responses**:
+  - 400 Bad Request: Khi thiếu tham số `user_id`
+  - 404 Not Found: Khi không tìm thấy user với ID đã cho
 
 #### Create Thread
 
@@ -303,6 +340,7 @@ The API includes automatic content moderation for threads and comments. When cre
   ```
 
 ````
+
 - **Success Response**:
   ```json
   {
@@ -328,6 +366,8 @@ The API includes automatic content moderation for threads and comments. When cre
     "is_reposted": false,
     "comment_count": 0
   }
+  ```
+
 ````
 
 - **Error Response (Toxic Content)**:
@@ -352,6 +392,8 @@ The API includes automatic content moderation for threads and comments. When cre
     "likes_count": 6,
     "is_liked": true
   }
+  ```
+
 ````
 
 #### Repost/Unrepost Thread
@@ -399,6 +441,8 @@ The API includes automatic content moderation for threads and comments. When cre
       }
     ]
   }
+  ```
+
 ````
 
 #### Get Replies for a Comment
@@ -441,6 +485,7 @@ The API includes automatic content moderation for threads and comments. When cre
   ```
 
 ````
+
 - **Success Response**:
   ```json
   {
@@ -460,6 +505,8 @@ The API includes automatic content moderation for threads and comments. When cre
     "is_liked": false,
     "replies_count": 0
   }
+  ```
+
 ````
 
 #### Like/Unlike Comment
@@ -486,6 +533,8 @@ The API includes automatic content moderation for threads and comments. When cre
     "reposts_count": 4,
     "is_reposted": true
   }
+  ```
+
 ````
 
 ### 4. Follow APIs (`/api/follows/`)
@@ -537,6 +586,8 @@ The API includes automatic content moderation for threads and comments. When cre
   {
     "followed_id": 2
   }
+  ```
+
 ````
 
 - **Success Response**:
@@ -577,6 +628,8 @@ The API includes automatic content moderation for threads and comments. When cre
   {
     "count": 123
   }
+  ```
+
 ````
 
 ### 5. Notification APIs (`/api/notifications/`)
@@ -630,6 +683,8 @@ The API includes automatic content moderation for threads and comments. When cre
   {
     "count": 5
   }
+  ```
+
 ````
 
 #### Mark Notification as Read
@@ -655,6 +710,8 @@ The API includes automatic content moderation for threads and comments. When cre
   {
     "message": "All notifications marked as read"
   }
+  ```
+
 ````
 
 #### Get Unread Notifications
@@ -716,7 +773,7 @@ Authentication methods supported:
 {
   "detail": "Error message here"
 }
-````
+```
 
 Status codes:
 
