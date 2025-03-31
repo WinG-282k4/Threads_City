@@ -30,7 +30,11 @@ def custom_404(request):
 
 @ensure_csrf_cookie
 def get_csrf_token(request):
-    token = get_token(request)
+    """Get CSRF token from cookie or generate new one if not exists"""
+    token = request.COOKIES.get('csrftoken')
+    if not token:
+        # If no token in cookie, generate new one
+        token = get_token(request)
     return JsonResponse({
         'status': 'success',
         'data': {
