@@ -185,6 +185,13 @@ REST_FRAMEWORK = {
 }
 
 # CORS settings
+
+CSRF_COOKIE_NAME = 'csrftoken'  # Tên của cookie
+CSRF_USE_SESSIONS = False  # Token lưu trong cookie
+CSRF_COOKIE_HTTPONLY = False  # Client JS có thể đọc được cookie
+CSRF_COOKIE_SAMESITE = 'None'  # Allow cross-site requests
+CSRF_COOKIE_SECURE = True  # Only send over HTTPS
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # Frontend development server
     "http://127.0.0.1:5173",
@@ -231,8 +238,8 @@ CSRF_TRUSTED_ORIGINS = [
 CSRF_EXEMPT_URLS = [
     '/api/users/',  # Registration endpoint
     '/api/threads/',  # Thread endpoints
-    '/api/threads/*/like/',
-    '/api/threads/*/repost/',
+    # '/api/threads/*/like/',
+    # '/api/threads/*/repost/',
 ]
 
 # Cookie settings
