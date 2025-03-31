@@ -190,7 +190,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
     "https://wing2k4.pythonanywhere.com",
     "http://wing2k4.pythonanywhere.com",
-    "https://www.postman.com"  # Add Postman
+    "https://www.postman.com",  # Add Postman
+    "https://v0-clone-threads.vercel.app"  # Add Vercel domain
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -222,7 +223,8 @@ CSRF_TRUSTED_ORIGINS = [
     'http://wing2k4.pythonanywhere.com',
     'http://localhost:5173',
     'http://127.0.0.1:5173',
-    'https://www.postman.com'  # Add Postman
+    'https://www.postman.com',  # Add Postman
+    'https://v0-clone-threads.vercel.app'  # Add Vercel domain
 ]
 
 # CSRF settings for API
