@@ -236,10 +236,8 @@ CORS_ALLOW_HEADERS = [
 
 # CSRF settings for API
 CSRF_EXEMPT_URLS = [
-    '/api/users/',  # Registration endpoint
-    '/api/threads/',  # Thread endpoints
-    # '/api/threads/*/like/',
-    # '/api/threads/*/repost/',
+    '/api/users/$',  # Only exact registration endpoint
+    '/api/threads/$',  # Only exact threads endpoint
 ]
 
 # Cookie settings
