@@ -184,6 +184,22 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10
 }
 
+# CSRF settings
+CSRF_COOKIE_NAME = 'csrftoken'  # Tên của cookie
+CSRF_USE_SESSIONS = False  # Token lưu trong cookie
+CSRF_COOKIE_HTTPONLY = False  # Client JS có thể đọc được cookie
+CSRF_COOKIE_SAMESITE = 'None'  # Allow cross-site requests
+CSRF_COOKIE_SECURE = True  # Only send over HTTPS
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://wing2k4.pythonanywhere.com',
+    'http://wing2k4.pythonanywhere.com',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'https://www.postman.com',
+    'https://v0-clone-threads.vercel.app'
+]
+
 # CORS settings
 
 CSRF_COOKIE_NAME = 'csrftoken'  # Tên của cookie
@@ -197,11 +213,11 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
     "https://wing2k4.pythonanywhere.com",
     "http://wing2k4.pythonanywhere.com",
-    "https://www.postman.com",  # Add Postman
-    "https://v0-clone-threads.vercel.app"  # Add Vercel domain
+    "https://www.postman.com",
+    "https://v0-clone-threads.vercel.app"
 ]
 
-CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_CREDENTIALS = True  # Allow sending credentials (cookies)
 
 CORS_ALLOW_METHODS = [
     'DELETE',
@@ -222,16 +238,7 @@ CORS_ALLOW_HEADERS = [
     'user-agent',
     'x-csrftoken',
     'x-requested-with',
-]
-
-# CSRF settings
-CSRF_TRUSTED_ORIGINS = [
-    'https://wing2k4.pythonanywhere.com',
-    'http://wing2k4.pythonanywhere.com',
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-    'https://www.postman.com',  # Add Postman
-    'https://v0-clone-threads.vercel.app'  # Add Vercel domain
+    'referer',
 ]
 
 # CSRF settings for API
@@ -243,7 +250,7 @@ CSRF_EXEMPT_URLS = [
 ]
 
 # Cookie settings
-SESSION_COOKIE_SAMESITE = 'None'
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SAMESITE = 'None'
-CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE = 'None'  # Allow cross-site cookies
+SESSION_COOKIE_SECURE = True  # Only send over HTTPS
+CSRF_COOKIE_SAMESITE = 'None'  # Allow cross-site cookies
+CSRF_COOKIE_SECURE = True  # Only send over HTTPS
