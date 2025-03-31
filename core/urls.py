@@ -19,6 +19,8 @@ from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.http import JsonResponse
+from django.middleware.csrf import get_token
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 def custom_404(request):
     return JsonResponse({
@@ -26,8 +28,19 @@ def custom_404(request):
         "message": "Endpoint không tồn tại. Vui lòng kiểm tra lại URL."
     }, status=404)
 
+@ensure_csrf_cookie
+def get_csrf_token(request):
+    token = get_token(request)
+    return JsonResponse({
+        'status': 'success',
+        'data': {
+            'csrfToken': token
+        }
+    })
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/csrf/', get_csrf_token, name='csrf_token'),  # Add CSRF endpoint
     path('api/', include('thread.urls')),
     path('api/auth/', include('accounts.urls')),
     re_path(r'^.*$', custom_404),  # Catch all URLs

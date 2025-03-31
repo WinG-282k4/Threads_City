@@ -43,6 +43,30 @@ List and get operations return data directly without status wrapper:
 }
 ```
 
+### CSRF Token
+
+#### Get CSRF Token
+
+- **Endpoint**: `GET /api/csrf/`
+- **Authentication**: Not Required
+- **Description**: Get CSRF token for making POST/PUT/DELETE requests
+- **Response**:
+  ```json
+  {
+    "status": "success",
+    "data": {
+      "csrfToken": "your-csrf-token"
+    }
+  }
+  ```
+- **Usage**:
+  1. Call this endpoint first
+  2. Get token from both response and cookie
+  3. Include token in subsequent requests:
+     ```
+     X-CSRFToken: your-csrf-token
+     ```
+
 ### Content Moderation
 
 The API includes automatic content moderation for threads and comments. When creating a thread or comment, the content is checked against a toxicity detection API. If the content is flagged as toxic, the creation will be rejected with an appropriate error message.
