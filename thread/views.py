@@ -643,18 +643,24 @@ class ThreadViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def like(self, request, pk=None):
         thread = self.get_object()
-        like, created = Like.objects.get_or_create(thread=thread, user=request.user)
+        like, created = Like.objects.get_or_create(user=request.user, thread=thread)
         if not created:
             like.delete()
-        return Response({'status': 'success'})
+        return Response({
+            'likes_count': thread.likes.count(),
+            'is_liked': thread.likes.filter(user=request.user).exists()
+        })
 
     @action(detail=True, methods=['post'])
     def repost(self, request, pk=None):
         thread = self.get_object()
-        repost, created = Repost.objects.get_or_create(thread=thread, user=request.user)
+        repost, created = Repost.objects.get_or_create(user=request.user, thread=thread)
         if not created:
             repost.delete()
-        return Response({'status': 'success'})
+        return Response({
+            'reposts_count': thread.reposts.count(),
+            'is_reposted': thread.reposts.filter(user=request.user).exists()
+        })
 
 
 class CommentViewSet(viewsets.ModelViewSet):
