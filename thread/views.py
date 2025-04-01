@@ -647,8 +647,8 @@ class ThreadViewSet(viewsets.ModelViewSet):
         if not created:
             like.delete()
         return Response({
-            'likes_count': thread.likes.count(),
-            'is_liked': thread.likes.filter(user=request.user).exists()
+            'likes_count': thread.liked_users.count(),
+            'is_liked': thread.liked_users.filter(id=request.user.id).exists()
         })
 
     @action(detail=True, methods=['post'])
@@ -658,8 +658,8 @@ class ThreadViewSet(viewsets.ModelViewSet):
         if not created:
             repost.delete()
         return Response({
-            'reposts_count': thread.reposts.count(),
-            'is_reposted': thread.reposts.filter(user=request.user).exists()
+            'reposts_count': thread.reposted_users.count(),
+            'is_reposted': thread.reposted_users.filter(id=request.user.id).exists()
         })
 
 
