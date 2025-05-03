@@ -263,3 +263,25 @@ CHANNEL_LAYERS = {
         "BACKEND": "channels.layers.InMemoryChannelLayer"
     }
 }
+
+# Cấu hình Pusher - đọc từ biến môi trường
+PUSHER_APP_ID = os.getenv('PUSHER_APP_ID')
+PUSHER_KEY = os.getenv('PUSHER_KEY')
+PUSHER_SECRET = os.getenv('PUSHER_SECRET')
+PUSHER_CLUSTER = os.getenv('PUSHER_CLUSTER')
+
+# Kiểm tra nếu đang chạy trên PythonAnywhere
+ON_PYTHONANYWHERE = 'PYTHONANYWHERE_SITE' in os.environ
+USE_PUSHER = ON_PYTHONANYWHERE
+
+# Nếu đang chạy trên môi trường local, bạn có thể chọn sử dụng Channels hoặc Pusher
+if not ON_PYTHONANYWHERE:
+    INSTALLED_APPS += ['channels']
+    ASGI_APPLICATION = "core.asgi.application"
+
+    # Cấu hình Channels
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer"
+        }
+    }

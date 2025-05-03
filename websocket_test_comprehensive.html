@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>WebSocket Comprehensive Test</title>
+    <title>Pusher Test</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -93,9 +93,11 @@
         display: none;
       }
     </style>
+    <!-- Thêm thư viện Pusher -->
+    <script src="https://js.pusher.com/7.2/pusher.min.js"></script>
   </head>
   <body>
-    <h1>WebSocket Comprehensive Test</h1>
+    <h1>Pusher Test Page</h1>
 
     <div class="container">
       <div class="card">
@@ -122,11 +124,28 @@
             <label for="threadId">Thread ID:</label>
             <input type="number" id="threadId" value="1" />
           </div>
+          <div class="form-group">
+            <label for="pusherKey">Pusher Key:</label>
+            <input
+              type="text"
+              id="pusherKey"
+              placeholder="Nhập Pusher key của bạn"
+            />
+          </div>
+          <div class="form-group">
+            <label for="pusherCluster">Pusher Cluster:</label>
+            <input
+              type="text"
+              id="pusherCluster"
+              value="ap1"
+              placeholder="Cluster (ap1, eu, us2, etc)"
+            />
+          </div>
           <div class="btn-group">
-            <button onclick="connectThreadWebSocket()">
-              Connect to Thread
+            <button onclick="connectPusherThread()">
+              Connect to Thread Channel
             </button>
-            <button class="disconnect" onclick="disconnectThreadWebSocket()">
+            <button class="disconnect" onclick="disconnectPusherThread()">
               Disconnect
             </button>
           </div>
@@ -138,10 +157,10 @@
             <input type="number" id="userId" value="1" />
           </div>
           <div class="btn-group">
-            <button onclick="connectUserWebSocket()">
-              Connect to User Notifications
+            <button onclick="connectPusherUser()">
+              Connect to User Channel
             </button>
-            <button class="disconnect" onclick="disconnectUserWebSocket()">
+            <button class="disconnect" onclick="disconnectPusherUser()">
               Disconnect
             </button>
           </div>
@@ -218,14 +237,15 @@
       </div>
 
       <div class="card">
-        <h2>WebSocket Log</h2>
+        <h2>Pusher Log</h2>
         <div class="log" id="log"></div>
       </div>
     </div>
 
     <script>
-      let threadSocket = null;
-      let userSocket = null;
+      let pusher = null;
+      let threadChannel = null;
+      let userChannel = null;
 
       // Show/hide tabs
       function showTab(tabId) {
@@ -280,123 +300,159 @@
         logDiv.scrollTop = logDiv.scrollHeight;
       }
 
-      function connectThreadWebSocket() {
+      function connectPusherThread() {
         const threadId = document.getElementById("threadId").value;
+        const pusherKey = document.getElementById("pusherKey").value;
+        const pusherCluster = document.getElementById("pusherCluster").value;
         const sessionId = document.getElementById("sessionid").value;
 
-        log(
-          `Connecting to Thread WebSocket: ws://127.0.0.1:8000/ws/thread/${threadId}/`,
-          "info"
-        );
+        if (!pusherKey) {
+          log("Vui lòng nhập Pusher key!", "error");
+          return;
+        }
 
-        threadSocket = new WebSocket(
-          `ws://127.0.0.1:8000/ws/thread/${threadId}/`
-        );
+        log(`Kết nối đến Pusher với key: ${pusherKey}`, "info");
 
+        // Thiết lập cookie nếu cần
         if (sessionId) {
-          log(`Using session ID: ${sessionId}`, "info");
+          log(`Sử dụng session ID: ${sessionId}`, "info");
           document.cookie = `sessionid=${sessionId}; path=/`;
         }
 
-        threadSocket.onopen = function (e) {
-          log("Thread Connection established!", "success");
-        };
+        // Khởi tạo Pusher client
+        pusher = new Pusher(pusherKey, {
+          cluster: pusherCluster,
+          forceTLS: true,
+        });
 
-        threadSocket.onmessage = function (event) {
-          log(`Thread Data received: ${event.data}`);
-          try {
-            const data = JSON.parse(event.data);
-            log(
-              `Parsed thread data: ${JSON.stringify(data, null, 2)}`,
-              "success"
-            );
-          } catch (e) {
-            log("Error parsing data", "error");
-          }
-        };
+        // Theo dõi trạng thái kết nối
+        pusher.connection.bind("connected", () => {
+          log("Pusher connection established!", "success");
+        });
 
-        threadSocket.onclose = function (event) {
-          if (event.wasClean) {
-            log(
-              `Thread Connection closed cleanly, code=${event.code} reason=${event.reason}`,
-              "info"
-            );
-          } else {
-            log("Thread Connection died", "error");
-          }
-        };
+        pusher.connection.bind("error", (err) => {
+          log(`Pusher connection error: ${JSON.stringify(err)}`, "error");
+        });
 
-        threadSocket.onerror = function (error) {
-          log(`Thread Connection Error: ${error.message}`, "error");
-        };
+        // Đăng ký channel và các events
+        const channelName = `thread_${threadId}`;
+        log(`Đăng ký channel: ${channelName}`, "info");
+
+        threadChannel = pusher.subscribe(channelName);
+
+        // Đăng ký lắng nghe các sự kiện
+        threadChannel.bind("like_update", function (data) {
+          log(
+            `Nhận sự kiện like_update: ${JSON.stringify(data, null, 2)}`,
+            "success"
+          );
+        });
+
+        threadChannel.bind("comment_update", function (data) {
+          log(
+            `Nhận sự kiện comment_update: ${JSON.stringify(data, null, 2)}`,
+            "success"
+          );
+        });
+
+        // Xử lý lỗi subscribe
+        threadChannel.bind("pusher:subscription_error", function (status) {
+          log(`Lỗi subscribe channel: ${status}`, "error");
+        });
+
+        threadChannel.bind("pusher:subscription_succeeded", function () {
+          log(`Đã subscribe thành công vào channel ${channelName}`, "success");
+        });
       }
 
-      function connectUserWebSocket() {
+      function connectPusherUser() {
         const userId = document.getElementById("userId").value;
+        const pusherKey =
+          document.getElementById("pusherKey").value ||
+          document.querySelector("#thread-tab #pusherKey").value;
+        const pusherCluster =
+          document.getElementById("pusherCluster").value ||
+          document.querySelector("#thread-tab #pusherCluster").value;
         const sessionId = document.getElementById("sessionid").value;
 
-        log(
-          `Connecting to User WebSocket: ws://127.0.0.1:8000/ws/user/${userId}/`,
-          "info"
-        );
+        if (!pusherKey) {
+          log("Vui lòng nhập Pusher key!", "error");
+          return;
+        }
 
-        userSocket = new WebSocket(`ws://127.0.0.1:8000/ws/user/${userId}/`);
+        log(`Kết nối đến Pusher với key: ${pusherKey}`, "info");
 
+        // Thiết lập cookie nếu cần
         if (sessionId) {
-          log(`Using session ID: ${sessionId}`, "info");
+          log(`Sử dụng session ID: ${sessionId}`, "info");
           document.cookie = `sessionid=${sessionId}; path=/`;
         }
 
-        userSocket.onopen = function (e) {
-          log("User Connection established!", "success");
-        };
+        // Sử dụng pusher instance đã có hoặc tạo mới
+        if (!pusher) {
+          pusher = new Pusher(pusherKey, {
+            cluster: pusherCluster,
+            forceTLS: true,
+          });
 
-        userSocket.onmessage = function (event) {
-          log(`User Data received: ${event.data}`);
-          try {
-            const data = JSON.parse(event.data);
-            log(
-              `Parsed user data: ${JSON.stringify(data, null, 2)}`,
-              "success"
-            );
-          } catch (e) {
-            log("Error parsing data", "error");
-          }
-        };
+          pusher.connection.bind("connected", () => {
+            log("Pusher connection established!", "success");
+          });
 
-        userSocket.onclose = function (event) {
-          if (event.wasClean) {
-            log(
-              `User Connection closed cleanly, code=${event.code} reason=${event.reason}`,
-              "info"
-            );
-          } else {
-            log("User Connection died", "error");
-          }
-        };
+          pusher.connection.bind("error", (err) => {
+            log(`Pusher connection error: ${JSON.stringify(err)}`, "error");
+          });
+        }
 
-        userSocket.onerror = function (error) {
-          log(`User Connection Error: ${error.message}`, "error");
-        };
+        // Đăng ký channel và các events
+        const channelName = `user_${userId}`;
+        log(`Đăng ký channel: ${channelName}`, "info");
+
+        userChannel = pusher.subscribe(channelName);
+
+        // Đăng ký lắng nghe các sự kiện
+        userChannel.bind("notification_update", function (data) {
+          log(`Nhận thông báo: ${JSON.stringify(data, null, 2)}`, "success");
+        });
+
+        // Xử lý lỗi subscribe
+        userChannel.bind("pusher:subscription_error", function (status) {
+          log(`Lỗi subscribe channel: ${status}`, "error");
+        });
+
+        userChannel.bind("pusher:subscription_succeeded", function () {
+          log(`Đã subscribe thành công vào channel ${channelName}`, "success");
+        });
       }
 
-      function disconnectThreadWebSocket() {
-        if (threadSocket) {
-          log("Disconnecting thread...", "info");
-          threadSocket.close();
-          threadSocket = null;
+      function disconnectPusherThread() {
+        if (threadChannel) {
+          log("Ngắt kết nối channel thread...", "info");
+          pusher.unsubscribe(
+            `thread_${document.getElementById("threadId").value}`
+          );
+          threadChannel = null;
+          log("Đã ngắt kết nối thread channel", "info");
         } else {
-          log("No active thread connection", "error");
+          log("Không có kết nối thread channel đang hoạt động", "error");
         }
       }
 
-      function disconnectUserWebSocket() {
-        if (userSocket) {
-          log("Disconnecting user...", "info");
-          userSocket.close();
-          userSocket = null;
+      function disconnectPusherUser() {
+        if (userChannel) {
+          log("Ngắt kết nối channel user...", "info");
+          pusher.unsubscribe(`user_${document.getElementById("userId").value}`);
+          userChannel = null;
+          log("Đã ngắt kết nối user channel", "info");
         } else {
-          log("No active user connection", "error");
+          log("Không có kết nối user channel đang hoạt động", "error");
+        }
+
+        // Nếu không còn kết nối nào, đóng Pusher
+        if (!threadChannel && !userChannel && pusher) {
+          pusher.disconnect();
+          pusher = null;
+          log("Đã ngắt kết nối Pusher", "info");
         }
       }
 

@@ -20,7 +20,7 @@ class CommentSerializer(serializers.ModelSerializer):
                  'likes_count', 'is_liked', 'replies_count']
 
     def get_likes_count(self, obj):
-        return obj.likecomment_set.count()
+        return obj.likes_count
 
     def get_is_liked(self, obj):
         request = self.context.get('request')
@@ -29,7 +29,7 @@ class CommentSerializer(serializers.ModelSerializer):
         return False
 
     def get_replies_count(self, obj):
-        return obj.sub_comment.count()
+        return obj.comment_count
 
 class ThreadSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
@@ -48,7 +48,7 @@ class ThreadSerializer(serializers.ModelSerializer):
                  'reposts_count', 'is_reposted', 'comment_count']
 
     def get_likes_count(self, obj):
-        return obj.like_set.count()
+        return obj.likes_count
 
     def get_is_liked(self, obj):
         request = self.context.get('request')

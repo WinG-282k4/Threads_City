@@ -3,6 +3,8 @@ from django.dispatch import receiver
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 import json
+from django.conf import settings
+from django.db.models import F
 
 from .models import (
     Like,
@@ -14,85 +16,241 @@ from .models import (
     RepostComment,
 )
 
-# Get channel layer for WebSocket communication
-channel_layer = get_channel_layer()
+# Import Pusher client nếu cần
+if settings.USE_PUSHER:
+    from .pusher_client import group_send
+else:
+    # Get channel layer for WebSocket communication khi sử dụng Channels
+    channel_layer = get_channel_layer()
+
+# Custom channel_layer.group_send function that works with both Pusher and Channels
+def channel_group_send(group_name, message_dict):
+    if settings.USE_PUSHER:
+        # Sử dụng Pusher
+        group_send(group_name, message_dict)
+    else:
+        # Sử dụng Django Channels
+        async_to_sync(channel_layer.group_send)(group_name, message_dict)
+
+# ------------ COUNTER UPDATE SIGNALS ------------
+
+@receiver(post_save, sender=Like)
+def increment_thread_likes(sender, instance, created, **kwargs):
+    """Increment the thread's likes_count when a Like is created"""
+    if created:
+        # Tăng likes_count lên 1, cần refreshed_from_db sau khi lưu
+        instance.thread.likes_count += 1
+        instance.thread.save(update_fields=['likes_count'])
 
 @receiver(post_delete, sender=Like)
-def update_likes_count(sender, instance, **kwargs):
-    # Update the likes_count of the related Thread when a Like is deleted
-    instance.thread.likes_count = Like.objects.filter(thread=instance.thread).count()
-    instance.thread.save()
+def decrement_thread_likes(sender, instance, **kwargs):
+    """Decrement the thread's likes_count when a Like is deleted"""
+    # Giảm likes_count đi 1, không để nó nhỏ hơn 0
+    if instance.thread.likes_count > 0:
+        instance.thread.likes_count -= 1
+        instance.thread.save(update_fields=['likes_count'])
+
+@receiver(post_save, sender=LikeComment)
+def increment_comment_likes(sender, instance, created, **kwargs):
+    """Increment the comment's likes_count when a LikeComment is created"""
+    if created:
+        instance.comment.likes_count += 1
+        instance.comment.save(update_fields=['likes_count'])
+
+@receiver(post_delete, sender=LikeComment)
+def decrement_comment_likes(sender, instance, **kwargs):
+    """Decrement the comment's likes_count when a LikeComment is deleted"""
+    if instance.comment.likes_count > 0:
+        instance.comment.likes_count -= 1
+        instance.comment.save(update_fields=['likes_count'])
+
+@receiver(post_save, sender=Comment)
+def increment_comment_count(sender, instance, created, **kwargs):
+    """Increment the thread or parent comment's comment_count when a Comment is created"""
+    if created:
+        if instance.parent_comment:
+            # If it's a reply, update the parent comment's comment_count
+            instance.parent_comment.comment_count += 1
+            instance.parent_comment.save(update_fields=['comment_count'])
+        else:
+            # If it's a direct comment on a thread, update the thread's comment_count
+            instance.thread.comment_count += 1
+            instance.thread.save(update_fields=['comment_count'])
+
+@receiver(post_delete, sender=Comment)
+def decrement_comment_count(sender, instance, **kwargs):
+    """Decrement the thread or parent comment's comment_count when a Comment is deleted"""
+    if instance.parent_comment:
+        # If it's a reply, update the parent comment's comment_count
+        if instance.parent_comment.comment_count > 0:
+            instance.parent_comment.comment_count -= 1
+            instance.parent_comment.save(update_fields=['comment_count'])
+    else:
+        # If it's a direct comment on a thread, update the thread's comment_count
+        if instance.thread.comment_count > 0:
+            instance.thread.comment_count -= 1
+            instance.thread.save(update_fields=['comment_count'])
+
+# ------------ WEBSOCKET NOTIFICATION SIGNALS ------------
+        
+@receiver(post_save, sender=Like)
+def notify_like_thread(sender, instance, created, **kwargs):
+    """Create notification for like and send WebSocket update."""
+    thread = instance.thread
     
-    # Send WebSocket update
-    async_to_sync(channel_layer.group_send)(
-        f'thread_{instance.thread.id}',
+    # 1. Create notification
+    if created and not thread.user == instance.user:
+        notification = Notification.objects.create(
+            user=thread.user,
+            type="like_thread",
+            content=f"{instance.user.username} likes your thread: {thread.content[:20]}...",
+            actioner=instance.user,
+        )
+        
+        # Send WebSocket/Pusher update for notification
+        channel_group_send(
+            f'user_{thread.user.id}',
+            {
+                'type': 'notification_update',
+                'content': {
+                    'type': 'new_notification',
+                    'notification_id': notification.id,
+                    'notification_type': 'like_thread',
+                    'content': notification.content
+                }
+            }
+        )
+    
+    # 2. Send WebSocket/Pusher update for like count
+    # Make sure to use the latest count, refresh from DB just to be safe
+    thread.refresh_from_db()
+    channel_group_send(
+        f'thread_{thread.id}',
         {
             'type': 'like_update',
             'content': {
                 'type': 'like_update',
-                'thread_id': instance.thread.id,
-                'likes_count': instance.thread.likes_count,
+                'thread_id': thread.id,
+                'likes_count': thread.likes_count,
+                'action': 'like' if created else 'unlike'
+            }
+        }
+    )
+
+@receiver(post_delete, sender=Like)
+def notify_unlike_thread(sender, instance, **kwargs):
+    """Send WebSocket update when a thread is unliked."""
+    # Get fresh instance to ensure we have the updated count
+    thread = instance.thread
+    thread.refresh_from_db()
+    
+    # Send WebSocket/Pusher update with the current like count
+    channel_group_send(
+        f'thread_{thread.id}',
+        {
+            'type': 'like_update',
+            'content': {
+                'type': 'like_update',
+                'thread_id': thread.id,
+                'likes_count': thread.likes_count,
                 'action': 'unlike'
             }
         }
     )
 
-
-@receiver(post_delete, sender=LikeComment)
-def update_cmt_likes_count(sender, instance, **kwargs):
-    # Update the likes_count of the related comment when a Like is deleted
-    instance.comment.likes_count = LikeComment.objects.filter(
-        comment=instance.comment
-    ).count()
-    instance.comment.save()
+@receiver(post_save, sender=LikeComment)
+def notify_like_comment(sender, instance, created, **kwargs):
+    """Create notification for likeComment and send WebSocket update."""
+    comment = instance.comment
     
-    # Send WebSocket update
-    async_to_sync(channel_layer.group_send)(
-        f'thread_{instance.comment.thread.id}',
+    # 1. Create notification
+    if created and not instance.user == comment.user:
+        notification = Notification.objects.create(
+            user=comment.user,
+            type="like_comment",
+            content=f"{instance.user.username} likes your comment: {comment.content[:20]}...",
+            actioner=instance.user,
+        )
+        
+        # Send WebSocket/Pusher update for notification
+        channel_group_send(
+            f'user_{comment.user.id}',
+            {
+                'type': 'notification_update',
+                'content': {
+                    'type': 'new_notification',
+                    'notification_id': notification.id,
+                    'notification_type': 'like_comment',
+                    'content': notification.content
+                }
+            }
+        )
+    
+    # 2. Send WebSocket/Pusher update for like count
+    # Make sure to use the latest count
+    comment.refresh_from_db()
+    channel_group_send(
+        f'thread_{comment.thread.id}',
         {
             'type': 'like_update',
             'content': {
                 'type': 'comment_like_update',
-                'thread_id': instance.comment.thread.id,
-                'comment_id': instance.comment.id,
-                'likes_count': instance.comment.likes_count,
+                'thread_id': comment.thread.id,
+                'comment_id': comment.id,
+                'likes_count': comment.likes_count,
+                'action': 'like' if created else 'unlike'
+            }
+        }
+    )
+
+@receiver(post_delete, sender=LikeComment)
+def notify_unlike_comment(sender, instance, **kwargs):
+    """Send WebSocket update when a comment is unliked."""
+    # Get fresh instance to ensure we have the updated count
+    comment = instance.comment
+    comment.refresh_from_db()
+    
+    # Send WebSocket/Pusher update with the current like count
+    channel_group_send(
+        f'thread_{comment.thread.id}',
+        {
+            'type': 'like_update',
+            'content': {
+                'type': 'comment_like_update',
+                'thread_id': comment.thread.id,
+                'comment_id': comment.id,
+                'likes_count': comment.likes_count,
                 'action': 'unlike'
             }
         }
     )
 
-
 @receiver(post_delete, sender=Comment)
-def update_comment_count(sender, instance, **kwargs):
-    # Update the comment_count of the related Thread when a parent_comment is deleted
+def notify_delete_comment(sender, instance, **kwargs):
+    """Send WebSocket update when a comment is deleted."""
+    # Handle different cases for direct thread comments and replies
     if not instance.parent_comment:
-        instance.thread.comment_count = Comment.objects.filter(
-            thread=instance.thread, parent_comment=None
-        ).count()
-        instance.thread.save()
+        thread = instance.thread
+        thread.refresh_from_db()
         
-        # Send WebSocket update
-        async_to_sync(channel_layer.group_send)(
-            f'thread_{instance.thread.id}',
+        # Send WebSocket/Pusher update with the current comment count
+        channel_group_send(
+            f'thread_{thread.id}',
             {
                 'type': 'comment_update',
                 'content': {
                     'type': 'comment_deleted',
-                    'thread_id': instance.thread.id,
-                    'comment_count': instance.thread.comment_count
+                    'thread_id': thread.id,
+                    'comment_count': thread.comment_count
                 }
             }
         )
-    # Update the comment_count of the parent_comment
     else:
         parent_comment = instance.parent_comment
-        parent_comment.comment_count = Comment.objects.filter(
-            thread=instance.thread, parent_comment=parent_comment
-        ).count()
-        parent_comment.save()
+        parent_comment.refresh_from_db()
         
-        # Send WebSocket update
-        async_to_sync(channel_layer.group_send)(
+        # Send WebSocket/Pusher update with the current reply count
+        channel_group_send(
             f'thread_{instance.thread.id}',
             {
                 'type': 'comment_update',
@@ -105,88 +263,7 @@ def update_comment_count(sender, instance, **kwargs):
             }
         )
 
-
-@receiver(post_save, sender=Like)
-def create_notification_like_thread(sender, instance, created, **kwargs):
-    """Create notification for like."""
-    if created and not instance.thread.user == instance.user:
-        notification = Notification.objects.create(
-            user=instance.thread.user,
-            type="like_thread",
-            content=f"{instance.user.username} likes your thread: {instance.thread.content[:20]}...",
-            actioner=instance.user,
-        )
-        
-        # Send WebSocket update
-        async_to_sync(channel_layer.group_send)(
-            f'user_{instance.thread.user.id}',
-            {
-                'type': 'notification_update',
-                'content': {
-                    'type': 'new_notification',
-                    'notification_id': notification.id,
-                    'notification_type': 'like_thread',
-                    'content': notification.content
-                }
-            }
-        )
-    
-    # Send WebSocket update for like count
-    async_to_sync(channel_layer.group_send)(
-        f'thread_{instance.thread.id}',
-        {
-            'type': 'like_update',
-            'content': {
-                'type': 'like_update',
-                'thread_id': instance.thread.id,
-                'likes_count': instance.thread.likes_count,
-                'action': 'like' if created else 'unlike'
-            }
-        }
-    )
-
-
-@receiver(post_save, sender=LikeComment)
-def create_notification_like_comment(sender, instance, created, **kwargs):
-    """Create notification for likeComment."""
-    if created and not instance.user == instance.comment.user:
-        notification = Notification.objects.create(
-            user=instance.comment.user,
-            type="like_comment",
-            content=f"{instance.user.username} likes your comment: {instance.comment.content[:20]}...",
-            actioner=instance.user,
-        )
-        
-        # Send WebSocket update
-        async_to_sync(channel_layer.group_send)(
-            f'user_{instance.comment.user.id}',
-            {
-                'type': 'notification_update',
-                'content': {
-                    'type': 'new_notification',
-                    'notification_id': notification.id,
-                    'notification_type': 'like_comment',
-                    'content': notification.content
-                }
-            }
-        )
-    
-    # Send WebSocket update for like count
-    async_to_sync(channel_layer.group_send)(
-        f'thread_{instance.comment.thread.id}',
-        {
-            'type': 'like_update',
-            'content': {
-                'type': 'comment_like_update',
-                'thread_id': instance.comment.thread.id,
-                'comment_id': instance.comment.id,
-                'likes_count': instance.comment.likes_count,
-                'action': 'like' if created else 'unlike'
-            }
-        }
-    )
-
-
+# Các signal còn lại giữ nguyên
 @receiver(post_save, sender=Repost)
 def create_notification_repost_thread(sender, instance, created, **kwargs):
     """Create notification for Repost."""
@@ -198,8 +275,8 @@ def create_notification_repost_thread(sender, instance, created, **kwargs):
             actioner=instance.user,
         )
         
-        # Send WebSocket update
-        async_to_sync(channel_layer.group_send)(
+        # Send WebSocket/Pusher update
+        channel_group_send(
             f'user_{instance.thread.user.id}',
             {
                 'type': 'notification_update',
@@ -224,8 +301,8 @@ def create_notification_repost_comment(sender, instance, created, **kwargs):
             actioner=instance.user,
         )
         
-        # Send WebSocket update
-        async_to_sync(channel_layer.group_send)(
+        # Send WebSocket/Pusher update
+        channel_group_send(
             f'user_{instance.comment.user.id}',
             {
                 'type': 'notification_update',
@@ -250,8 +327,8 @@ def create_notification_follow(sender, instance, created, **kwargs):
             actioner=instance.follower,
         )
         
-        # Send WebSocket update
-        async_to_sync(channel_layer.group_send)(
+        # Send WebSocket/Pusher update
+        channel_group_send(
             f'user_{instance.followed.id}',
             {
                 'type': 'notification_update',
@@ -270,14 +347,22 @@ def create_notification_comment(sender, instance, created, **kwargs):
     """Create notification for Comment."""
     if not created:
         return
+    
+    # Ensure we use fresh data
+    if instance.parent_comment:
+        instance.parent_comment.refresh_from_db()
+        comment_count = instance.parent_comment.comment_count
+    else:
+        instance.thread.refresh_from_db()
+        comment_count = instance.thread.comment_count
         
-    # Send WebSocket update for comment creation
+    # Send WebSocket/Pusher update for comment creation
     message_content = {
         'type': 'new_comment',
         'thread_id': instance.thread.id,
         'comment_id': instance.id,
         'content': instance.content,
-        'comment_count': instance.thread.comment_count if not instance.parent_comment else instance.parent_comment.comment_count,
+        'comment_count': comment_count,
         'is_reply': instance.parent_comment is not None,
         'parent_comment_id': instance.parent_comment.id if instance.parent_comment else None,
         'user_info': {
@@ -287,7 +372,7 @@ def create_notification_comment(sender, instance, created, **kwargs):
         }
     }
     
-    async_to_sync(channel_layer.group_send)(
+    channel_group_send(
         f'thread_{instance.thread.id}',
         {
             'type': 'comment_update',
@@ -304,8 +389,8 @@ def create_notification_comment(sender, instance, created, **kwargs):
                 actioner=instance.user,
             )
             
-            # Send WebSocket update
-            async_to_sync(channel_layer.group_send)(
+            # Send WebSocket/Pusher update
+            channel_group_send(
                 f'user_{instance.parent_comment.user.id}',
                 {
                     'type': 'notification_update',
@@ -326,8 +411,8 @@ def create_notification_comment(sender, instance, created, **kwargs):
                 actioner=instance.user,
             )
             
-            # Send WebSocket update
-            async_to_sync(channel_layer.group_send)(
+            # Send WebSocket/Pusher update
+            channel_group_send(
                 f'user_{instance.thread.user.id}',
                 {
                     'type': 'notification_update',

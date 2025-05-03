@@ -50,10 +50,8 @@ class Like(models.Model):
         ordering = ["-created_at"]
 
     def save(self, *args, **kwargs):
+        # Just save the model, the signal will handle the counter updates
         super(Like, self).save(*args, **kwargs)
-        # Update the like_count of the related Thread
-        self.thread.likes_count = Like.objects.filter(thread=self.thread).count()
-        self.thread.save()
 
     def __str__(self):
         return f"{self.user.username} liked {self.thread.content[:20]}"
@@ -116,22 +114,8 @@ class Comment(models.Model):
         return hierarchy
 
     def save(self, *args, **kwargs):
-        # Check if this is a new comment or an existing one being updated
-        is_new_comment = self._state.adding
+        # Just save the model, the signal will handle the counter updates
         super(Comment, self).save(*args, **kwargs)
-
-        if is_new_comment and not self.parent_comment:
-            # Update the comment_count of the related Thread
-            self.thread.comment_count = Comment.objects.filter(
-                thread=self.thread, parent_comment=None
-            ).count()
-            self.thread.save()
-        if is_new_comment and self.parent_comment:
-            # Update the comment_count of the related parent comment
-            self.parent_comment.comment_count = Comment.objects.filter(
-                thread=self.thread, parent_comment=self.parent_comment
-            ).count()
-            self.parent_comment.save()
 
     def __str__(self):
         return f"Comment: {self.content[:20]}"
@@ -174,12 +158,8 @@ class LikeComment(models.Model):
         ordering = ["-created_at"]
 
     def save(self, *args, **kwargs):
+        # Just save the model, the signal will handle the counter updates
         super(LikeComment, self).save(*args, **kwargs)
-        # Update the like_count of the related comment
-        self.comment.likes_count = LikeComment.objects.filter(
-            comment=self.comment
-        ).count()
-        self.comment.save()
 
     def __str__(self):
         return f"{self.user.username} liked {self.comment.content[:20]}"

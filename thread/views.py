@@ -672,6 +672,8 @@ class ThreadViewSet(viewsets.ModelViewSet):
         like, created = Like.objects.get_or_create(user=request.user, thread=thread)
         if not created:
             like.delete()
+        # Refresh thread instance to get updated likes_count from database
+        thread.refresh_from_db()
         return Response({
             'likes_count': thread.likes_count,
             'is_liked': thread.liked_users.filter(id=request.user.id).exists()
@@ -738,6 +740,8 @@ class CommentViewSet(viewsets.ModelViewSet):
         like, created = LikeComment.objects.get_or_create(comment=comment, user=request.user)
         if not created:
             like.delete()
+        # Refresh comment instance to get updated likes_count from database
+        comment.refresh_from_db()
         return Response({
             'likes_count': comment.likes_count,
             'is_liked': comment.liked_users.filter(id=request.user.id).exists()
