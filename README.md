@@ -69,7 +69,36 @@ List and get operations return data directly without status wrapper:
 
 ### Content Moderation
 
-The API includes automatic content moderation for threads and comments. When creating a thread or comment, the content is checked against a toxicity detection API. If the content is flagged as toxic, the creation will be rejected with an appropriate error message.
+The API includes automatic content moderation for threads and comments. When creating a thread or comment, the content is checked against a toxicity detection API. If the content is flagged as toxic:
+
+1. The creation will be rejected with an appropriate error message
+2. A notification will be sent to the user informing them that their content violated community standards
+
+#### Thread Creation Error (Toxic Content)
+
+```json
+{
+  "status": "error",
+  "errors": {
+    "content": "Bài viết của bạn vi phạm tiêu chuẩn cộng đồng"
+  }
+}
+```
+
+#### Comment Creation Error (Toxic Content)
+
+```json
+{
+  "status": "error",
+  "errors": {
+    "content": "Bình luận của bạn vi phạm tiêu chuẩn cộng đồng"
+  }
+}
+```
+
+#### Toxic Content Notifications
+
+When toxic content is detected, a notification is sent to the user who attempted to post the content. The user will see a notification with the message "Bài viết của bạn vi phạm tiêu chuẩn cộng đồng và đã bị từ chối" (for threads) or "Bình luận của bạn vi phạm tiêu chuẩn cộng đồng và đã bị từ chối" (for comments).
 
 ### 1. Authentication APIs (`/api/auth/users/`)
 
@@ -434,6 +463,30 @@ The API includes automatic content moderation for threads and comments. When cre
 
 ````
 
+#### Delete Thread
+
+- **Endpoint**: `DELETE /api/threads/{thread_id}/`
+- **Authentication**: Required
+- **Description**: Delete a thread. You can only delete your own threads.
+- **Success Response**:
+  ```json
+  {
+    "status": "success",
+    "data": {
+      "message": "Thread deleted successfully"
+    }
+  }
+  ```
+- **Error Response (Not Owner)**:
+  ```json
+  {
+    "status": "error",
+    "errors": {
+      "detail": "You can only delete your own threads"
+    }
+  }
+  ```
+
 ### 3. Comment APIs (`/api/threads/{thread_id}/comments/`)
 
 #### Get Comments for a Thread
@@ -746,6 +799,78 @@ The API includes automatic content moderation for threads and comments. When cre
   - `is_read`: false
   - `page`: Page number for pagination
 - **Response**: Same as Get Notifications endpoint
+
+### WebSocket Support
+
+The API includes WebSocket support for real-time updates. WebSocket endpoints provide real-time updates for threads, comments, likes, and notifications.
+
+#### Thread WebSocket
+
+- **Endpoint**: `ws/thread/{thread_id}/`
+- **Authentication**: Required (via cookie)
+- **Events**:
+  - **Like Update**:
+    ```json
+    {
+      "type": "like_update",
+      "thread_id": 1,
+      "likes_count": 10,
+      "action": "like" or "unlike"
+    }
+    ```
+  - **Comment Like Update**:
+    ```json
+    {
+      "type": "comment_like_update",
+      "thread_id": 1,
+      "comment_id": 2,
+      "likes_count": 5,
+      "action": "like" or "unlike"
+    }
+    ```
+  - **New Comment**:
+    ```json
+    {
+      "type": "new_comment",
+      "thread_id": 1,
+      "comment_id": 3,
+      "comment_count": 15,
+      "is_reply": false,
+      "parent_comment_id": null
+    }
+    ```
+  - **Comment Deleted**:
+    ```json
+    {
+      "type": "comment_deleted",
+      "thread_id": 1,
+      "comment_count": 14
+    }
+    ```
+  - **Reply Deleted**:
+    ```json
+    {
+      "type": "reply_deleted",
+      "thread_id": 1,
+      "parent_comment_id": 2,
+      "replies_count": 3
+    }
+    ```
+
+#### User Notification WebSocket
+
+- **Endpoint**: `ws/user/{user_id}/`
+- **Authentication**: Required (via cookie)
+- **Events**:
+  - **New Notification**:
+    ```json
+    {
+      "type": "new_notification",
+      "notification_id": 1,
+      "notification_type": "like_thread" or "like_comment" or "comment_reply" or "thread_comment" or "follow" or "repost_thread" or "repost_comment",
+      "content": "Notification content"
+    }
+    ```
 
 ### Authentication & Headers
 

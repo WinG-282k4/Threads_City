@@ -9,3 +9,6 @@ djangorestframework
 django-cors-headers
 gunicorn
 whitenoise
+channels
+daphne
+channels-redis

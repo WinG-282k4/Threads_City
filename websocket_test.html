@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>WebSocket Test</title>
+  </head>
+  <body>
+    <h2>WebSocket Test</h2>
+    <div>
+      <label for="sessionid">Session ID (nếu cần):</label>
+      <input
+        type="text"
+        id="sessionid"
+        placeholder="Nhập session ID từ cookie"
+      />
+    </div>
+    <div style="margin-top: 10px">
+      <button onclick="connectWebSocket()">Connect</button>
+      <button onclick="disconnectWebSocket()">Disconnect</button>
+    </div>
+    <div
+      id="log"
+      style="
+        margin-top: 20px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        height: 300px;
+        overflow-y: auto;
+      "
+    ></div>
+
+    <script>
+      let socket;
+
+      function log(message) {
+        const logDiv = document.getElementById("log");
+        const line = document.createElement("div");
+        const timestamp = new Date().toLocaleTimeString();
+        line.textContent = `[${timestamp}] ${message}`;
+        logDiv.appendChild(line);
+        logDiv.scrollTop = logDiv.scrollHeight;
+      }
+
+      function connectWebSocket() {
+        // Thay đổi ID thread ở đây nếu cần
+        const threadId = 9;
+        const sessionId = document.getElementById("sessionid").value;
+
+        log(
+          `Connecting to WebSocket: ws://127.0.0.1:8000/ws/thread/${threadId}/`
+        );
+
+        // Tạo WebSocket với headers (không hỗ trợ trực tiếp trong constructor)
+        socket = new WebSocket(`ws://127.0.0.1:8000/ws/thread/${threadId}/`);
+
+        // Đối với authentication, bạn cần đảm bảo server đã nhận cookie
+        // Nếu cần, hãy đăng nhập vào web interface trước khi test WebSocket
+        if (sessionId) {
+          log(`Using session ID: ${sessionId}`);
+          document.cookie = `sessionid=${sessionId}; path=/`;
+        }
+
+        socket.onopen = function (e) {
+          log("Connection established!");
+        };
+
+        socket.onmessage = function (event) {
+          log(`Data received: ${event.data}`);
+          try {
+            const data = JSON.parse(event.data);
+            log(`Parsed data: ${JSON.stringify(data, null, 2)}`);
+          } catch (e) {
+            log("Error parsing data");
+          }
+        };
+
+        socket.onclose = function (event) {
+          if (event.wasClean) {
+            log(
+              `Connection closed cleanly, code=${event.code} reason=${event.reason}`
+            );
+          } else {
+            // e.g. server process killed or network down
+            log("Connection died");
+          }
+        };
+
+        socket.onerror = function (error) {
+          log(`Error: ${error.message}`);
+        };
+      }
+
+      function disconnectWebSocket() {
+        if (socket) {
+          log("Disconnecting...");
+          socket.close();
+        } else {
+          log("No active connection");
+        }
+      }
+    </script>
+  </body>
+</html>

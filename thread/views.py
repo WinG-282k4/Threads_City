@@ -548,6 +548,14 @@ class ThreadViewSet(viewsets.ModelViewSet):
         # Check toxic content before creating thread
         content = serializer.validated_data.get('content', '')
         if check_toxic_content(content):
+            # Create notification for the user who posted toxic content
+            Notification.objects.create(
+                user=self.request.user,
+                type="toxic_content",
+                content=f"Bài viết của bạn vi phạm tiêu chuẩn cộng đồng và đã bị từ chối",
+                actioner=self.request.user
+            )
+            
             raise serializers.ValidationError({
                 'status': 'error',
                 'errors': {
@@ -558,6 +566,24 @@ class ThreadViewSet(viewsets.ModelViewSet):
         # Create thread if content is safe
         thread = serializer.save(user=self.request.user)
         return thread
+
+    def destroy(self, request, *args, **kwargs):
+        thread = self.get_object()
+        
+        # Check if user is the owner of the thread
+        if thread.user != request.user:
+            return Response(
+                {"status": "error", "errors": {"detail": "You can only delete your own threads"}},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        # Delete the thread
+        thread.delete()
+        
+        return Response(
+            {"status": "success", "data": {"message": "Thread deleted successfully"}},
+            status=status.HTTP_200_OK
+        )
 
     @action(detail=False, methods=['get'])
     def feed(self, request):
@@ -647,7 +673,7 @@ class ThreadViewSet(viewsets.ModelViewSet):
         if not created:
             like.delete()
         return Response({
-            'likes_count': thread.liked_users.count(),
+            'likes_count': thread.likes_count,
             'is_liked': thread.liked_users.filter(id=request.user.id).exists()
         })
 
@@ -685,6 +711,25 @@ class CommentViewSet(viewsets.ModelViewSet):
         parent_comment = None
         if parent_comment_id:
             parent_comment = get_object_or_404(Comment, id=parent_comment_id)
+            
+        # Check toxic content before creating comment
+        content = serializer.validated_data.get('content', '')
+        if check_toxic_content(content):
+            # Create notification for the user who posted toxic content
+            Notification.objects.create(
+                user=self.request.user,
+                type="toxic_content",
+                content=f"Bình luận của bạn vi phạm tiêu chuẩn cộng đồng và đã bị từ chối",
+                actioner=self.request.user
+            )
+            
+            raise serializers.ValidationError({
+                'status': 'error',
+                'errors': {
+                    'content': 'Bình luận của bạn vi phạm tiêu chuẩn cộng đồng'
+                }
+            })
+            
         serializer.save(user=self.request.user, thread=thread, parent_comment=parent_comment)
 
     @action(detail=True, methods=['post'])
@@ -693,7 +738,10 @@ class CommentViewSet(viewsets.ModelViewSet):
         like, created = LikeComment.objects.get_or_create(comment=comment, user=request.user)
         if not created:
             like.delete()
-        return Response({'status': 'success'})
+        return Response({
+            'likes_count': comment.likes_count,
+            'is_liked': comment.liked_users.filter(id=request.user.id).exists()
+        })
 
     @action(detail=True, methods=['post'])
     def repost(self, request, thread_pk=None, pk=None):

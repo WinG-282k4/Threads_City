@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "sorl.thumbnail",
     "rest_framework",
     "corsheaders",
+    "channels",
 ]
 
 MIDDLEWARE = [
@@ -80,6 +81,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "core.wsgi.application"
+ASGI_APPLICATION = "core.asgi.application"
 
 
 # Database
@@ -211,6 +213,8 @@ CSRF_COOKIE_SECURE = True  # Only send over HTTPS
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # Frontend development server
     "http://127.0.0.1:5173",
+    "http://localhost:8000",  # Django server
+    "http://127.0.0.1:8000", 
     "https://wing2k4.pythonanywhere.com",
     "http://wing2k4.pythonanywhere.com",
     "https://www.postman.com",
@@ -252,3 +256,10 @@ SESSION_COOKIE_SAMESITE = 'None'  # Allow cross-site cookies
 SESSION_COOKIE_SECURE = True  # Only send over HTTPS
 CSRF_COOKIE_SAMESITE = 'None'  # Allow cross-site cookies
 CSRF_COOKIE_SECURE = True  # Only send over HTTPS
+
+# Channel layers for WebSockets
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}

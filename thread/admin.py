@@ -69,6 +69,8 @@ class FollowAdmin(admin.ModelAdmin):
 
 
 @admin.register(Notification)
-class LikeAdmin(admin.ModelAdmin):
-    list_display = ["content"]
-    list_filter = ["user"]
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'type', 'content', 'created_at', 'is_read')
+    search_fields = ('user__username', 'type', 'content')
+    list_filter = ('type', 'is_read')
+    ordering = ('-created_at',)
