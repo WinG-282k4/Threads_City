@@ -800,77 +800,175 @@ When toxic content is detected, a notification is sent to the user who attempted
   - `page`: Page number for pagination
 - **Response**: Same as Get Notifications endpoint
 
-### WebSocket Support
+### WebSocket/Real-time Updates
 
-The API includes WebSocket support for real-time updates. WebSocket endpoints provide real-time updates for threads, comments, likes, and notifications.
+The application supports real-time updates using WebSockets. The implementation automatically switches between:
+- **Django Channels**: Used in development/local environment
+- **Pusher**: Used when deployed on PythonAnywhere (which doesn't support WebSockets on free tiers)
 
-#### Thread WebSocket
+#### Connection Details
 
-- **Endpoint**: `ws/thread/{thread_id}/`
-- **Authentication**: Required (via cookie)
-- **Events**:
-  - **Like Update**:
-    ```json
-    {
-      "type": "like_update",
-      "thread_id": 1,
-      "likes_count": 10,
-      "action": "like" or "unlike"
-    }
-    ```
-  - **Comment Like Update**:
-    ```json
-    {
-      "type": "comment_like_update",
-      "thread_id": 1,
-      "comment_id": 2,
-      "likes_count": 5,
-      "action": "like" or "unlike"
-    }
-    ```
-  - **New Comment**:
-    ```json
-    {
-      "type": "new_comment",
-      "thread_id": 1,
-      "comment_id": 3,
-      "comment_count": 15,
-      "is_reply": false,
-      "parent_comment_id": null
-    }
-    ```
-  - **Comment Deleted**:
-    ```json
-    {
-      "type": "comment_deleted",
-      "thread_id": 1,
-      "comment_count": 14
-    }
-    ```
-  - **Reply Deleted**:
-    ```json
-    {
-      "type": "reply_deleted",
-      "thread_id": 1,
-      "parent_comment_id": 2,
-      "replies_count": 3
-    }
-    ```
+##### Django Channels (Local Development)
+- **Thread Channel**: `ws://localhost:8000/ws/thread/{thread_id}/`
+- **User Notification Channel**: `ws://localhost:8000/ws/user/{user_id}/`
 
-#### User Notification WebSocket
+##### Pusher (Production/PythonAnywhere)
+- **Thread Channel**: `thread_{thread_id}`
+- **User Notification Channel**: `user_{user_id}`
+- **Events**: Same event names as Django Channels
 
-- **Endpoint**: `ws/user/{user_id}/`
-- **Authentication**: Required (via cookie)
-- **Events**:
-  - **New Notification**:
-    ```json
-    {
-      "type": "new_notification",
-      "notification_id": 1,
-      "notification_type": "like_thread" or "like_comment" or "comment_reply" or "thread_comment" or "follow" or "repost_thread" or "repost_comment",
-      "content": "Notification content"
-    }
-    ```
+#### Authentication
+- **Django Channels**: Authentication via session cookie (`sessionid`)
+- **Pusher**: Client-side subscription with public key
+
+#### Events & Payloads
+
+##### Thread Updates
+
+1. **Like Update**
+   - **Event**: `like_update`
+   - **Data**:
+     ```json
+     {
+       "type": "like_update",
+       "thread_id": 1,
+       "likes_count": 10,
+       "action": "like" or "unlike"
+     }
+     ```
+
+2. **Comment Like Update**
+   - **Event**: `like_update`
+   - **Data**:
+     ```json
+     {
+       "type": "comment_like_update",
+       "thread_id": 1,
+       "comment_id": 2,
+       "likes_count": 5,
+       "action": "like" or "unlike"
+     }
+     ```
+
+3. **New Comment**
+   - **Event**: `comment_update`
+   - **Data**:
+     ```json
+     {
+       "type": "new_comment",
+       "thread_id": 1,
+       "comment_id": 3,
+       "content": "Comment content",
+       "comment_count": 15,
+       "is_reply": false,
+       "parent_comment_id": null,
+       "user_info": {
+         "id": 1,
+         "username": "username",
+         "avatar": "url_to_avatar_image"
+       }
+     }
+     ```
+
+4. **Comment Deleted**
+   - **Event**: `comment_update`
+   - **Data**:
+     ```json
+     {
+       "type": "comment_deleted",
+       "thread_id": 1,
+       "comment_count": 14
+     }
+     ```
+
+5. **Reply Deleted**
+   - **Event**: `comment_update`
+   - **Data**:
+     ```json
+     {
+       "type": "reply_deleted",
+       "thread_id": 1,
+       "parent_comment_id": 2,
+       "replies_count": 3
+     }
+     ```
+
+##### User Notifications
+
+1. **New Notification**
+   - **Event**: `notification_update`
+   - **Data**:
+     ```json
+     {
+       "type": "new_notification",
+       "notification_id": 1,
+       "notification_type": "like_thread" | "like_comment" | "comment_reply" |
+                           "thread_comment" | "follow" | "repost_thread" |
+                           "repost_comment" | "toxic_content",
+       "content": "Notification content"
+     }
+     ```
+
+#### Frontend Implementation
+
+##### Pusher (JavaScript Example)
+```javascript
+// Initialize Pusher
+const pusher = new Pusher('your_pusher_key', {
+  cluster: 'your_pusher_cluster',
+  forceTLS: true
+});
+
+// Subscribe to a thread channel
+const threadChannel = pusher.subscribe(`thread_${threadId}`);
+
+// Listen for like updates
+threadChannel.bind('like_update', function(data) {
+  // Update UI with new like count
+  console.log(`Thread ${data.thread_id} now has ${data.likes_count} likes`);
+});
+
+// Subscribe to user notifications
+const userChannel = pusher.subscribe(`user_${userId}`);
+
+// Listen for new notifications
+userChannel.bind('notification_update', function(data) {
+  // Update UI with new notification
+  console.log(`New notification: ${data.content}`);
+});
+```
+
+##### Django Channels (JavaScript WebSocket Example)
+```javascript
+// Connect to thread WebSocket
+const threadSocket = new WebSocket(`ws://localhost:8000/ws/thread/${threadId}/`);
+
+// Handle messages
+threadSocket.onmessage = function(e) {
+  const data = JSON.parse(e.data);
+
+  if (data.type === 'like_update') {
+    // Update UI with new like count
+    console.log(`Thread ${data.thread_id} now has ${data.likes_count} likes`);
+  } else if (data.type === 'comment_update') {
+    // Handle comment updates
+    console.log(`New comment on thread ${data.thread_id}`);
+  }
+};
+
+// Connect to user notification WebSocket
+const userSocket = new WebSocket(`ws://localhost:8000/ws/user/${userId}/`);
+
+// Handle notifications
+userSocket.onmessage = function(e) {
+  const data = JSON.parse(e.data);
+
+  if (data.type === 'notification_update') {
+    // Update UI with new notification
+    console.log(`New notification: ${data.content}`);
+  }
+};
+```
 
 ### Authentication & Headers
 
