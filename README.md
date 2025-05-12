@@ -66,6 +66,8 @@ List and get operations return data directly without status wrapper:
      ```
      X-CSRFToken: your-csrf-token
      ```
+  4. In development mode, CSRF tokens are served over HTTP (not requiring HTTPS)
+     and use Lax same-site policy.
 
 ### Content Moderation
 
@@ -240,6 +242,22 @@ When toxic content is detected, a notification is sent to the user who attempted
   ```
 
 ````
+
+#### User Logout
+
+- **Endpoint**: `POST /api/auth/users/logout/`
+- **Authentication**: Required
+- **Description**: Logs out the current user by removing their session and all related cookies
+- **Success Response**:
+  ```json
+  {
+    "status": "success",
+    "data": {
+      "message": "Logged out successfully"
+    }
+  }
+  ```
+- **Effect**: This API không chỉ xóa session của người dùng trên server mà còn xóa các cookie liên quan đến phiên đăng nhập (`sessionid` và `csrftoken`) trên trình duyệt của người dùng
 
 #### Search Users
 
