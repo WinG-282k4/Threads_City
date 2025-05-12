@@ -8,7 +8,14 @@ from .models import MyUser
 @receiver(post_save, sender=User)
 def create_myuser(sender, instance, created, **kwargs):
     if created:
-        MyUser.objects.create(user=instance)
+        # Tạo MyUser với avatar mặc định
+        default_avatar = "https://img.freepik.com/premium-vector/user-profile-person-avatar-identity-login-icon-vector_1277826-995.jpg?w=360"
+        # Tạo đối tượng MyUser với avatar mặc định
+        MyUser.objects.create(
+            user=instance, 
+            link=default_avatar,
+            bio=f"Xin chào! Tôi là {instance.username}."
+        )
 
 
 @receiver(post_save, sender=User)

@@ -173,13 +173,16 @@ When toxic content is detected, a notification is sent to the user who attempted
 - **Response**:
   ```json
   {
-    "id": 1,
-    "username": "username",
-    "email": "email@example.com",
-    "first_name": "First",
-    "last_name": "Last",
-    "date_joined": "2024-03-21T10:00:00Z",
-    "avatar": "url_to_avatar_image"
+    "status": "success",
+    "data": {
+      "id": 25,
+      "username": "NPThanh12345",
+      "email": "user@example.com",
+      "first_name": "John",
+      "last_name": "Doe",
+      "date_joined": "2025-05-12T18:01:31.512704+06:30",
+      "avatar": "https://img.freepik.com/premium-vector/user-profile-person-avatar-identity-login-icon-vector_1277826-995.jpg?w=360"
+    }
   }
   ```
 
