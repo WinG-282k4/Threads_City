@@ -253,12 +253,12 @@ When toxic content is detected, a notification is sent to the user who attempted
 - **Description**: Logs out the current user by removing their session and all related cookies
 - **Success Response**:
   ```json
-  {
-    "status": "success",
-    "data": {
-      "message": "Logged out successfully"
+    {
+      "status": "success",
+      "data": {
+        "message": "Logged out successfully"
+      }
     }
-  }
   ```
 - **Effect**: This API không chỉ xóa session của người dùng trên server mà còn xóa các cookie liên quan đến phiên đăng nhập (`sessionid` và `csrftoken`) trên trình duyệt của người dùng
 
