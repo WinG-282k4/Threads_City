@@ -779,6 +779,40 @@ class FollowViewSet(viewsets.ModelViewSet):
     def followers_count(self, request):
         count = Follow.objects.filter(followed=request.user).count()
         return Response({'count': count})
+        
+    @action(detail=False, methods=['get'])
+    def user_follows_count(self, request):
+        user_id = request.query_params.get('user_id')
+        if not user_id:
+            return Response({'error': 'user_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            user = User.objects.get(id=user_id)
+            followers_count = Follow.objects.filter(followed=user).count()
+            following_count = Follow.objects.filter(follower=user).count()
+            
+            return Response({
+                'followers_count': followers_count,
+                'following_count': following_count
+            })
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            
+    @action(detail=False, methods=['get'])
+    def check_status(self, request):
+        user_id = request.query_params.get('user_id')
+        if not user_id:
+            return Response({'error': 'user_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            user = User.objects.get(id=user_id)
+            is_followed = Follow.objects.filter(follower=request.user, followed=user).exists()
+            
+            return Response({
+                'is_followed': is_followed
+            })
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
 class NotificationViewSet(viewsets.ReadOnlyModelViewSet):

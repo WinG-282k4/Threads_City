@@ -120,7 +120,9 @@ When toxic content is detected, a notification is sent to the user who attempted
   }
   ```
 
-````
+```
+
+```
 
 - **Success Response**:
   ```json
@@ -135,7 +137,11 @@ When toxic content is detected, a notification is sent to the user who attempted
       "avatar": "url_to_avatar_image"
     }
   }
-````
+  ```
+
+```
+
+```
 
 #### User Login
 
@@ -149,7 +155,10 @@ When toxic content is detected, a notification is sent to the user who attempted
   }
   ```
 
-````
+```
+
+```
+
 - **Success Response**:
   ```json
   {
@@ -164,7 +173,11 @@ When toxic content is detected, a notification is sent to the user who attempted
       "avatar": "url_to_avatar_image"
     }
   }
-````
+  ```
+
+```
+
+```
 
 #### Get Current User
 
@@ -186,13 +199,12 @@ When toxic content is detected, a notification is sent to the user who attempted
   }
   ```
 
-````
-
 #### Update Current User
 
 - **Endpoint**: `PUT/PATCH /api/auth/users/update_me/`
 - **Authentication**: Required
 - **Body**:
+
   ```json
   {
     "email": "new.email@example.com",
@@ -201,7 +213,7 @@ When toxic content is detected, a notification is sent to the user who attempted
     "avatar": "new_avatar_link",
     "bio": "New bio text"
   }
-````
+  ```
 
 - **Success Response**:
   ```json
@@ -219,20 +231,19 @@ When toxic content is detected, a notification is sent to the user who attempted
   }
   ```
 
-````
-
 #### Change Password
 
 - **Endpoint**: `POST /api/auth/users/change_password/`
 - **Authentication**: Required
 - **Body**:
+
   ```json
   {
     "old_password": "oldpassword",
     "new_password": "newpassword",
     "new_password2": "newpassword"
   }
-````
+  ```
 
 - **Success Response**:
   ```json
@@ -244,8 +255,6 @@ When toxic content is detected, a notification is sent to the user who attempted
   }
   ```
 
-````
-
 #### User Logout
 
 - **Endpoint**: `POST /api/auth/users/logout/`
@@ -253,12 +262,12 @@ When toxic content is detected, a notification is sent to the user who attempted
 - **Description**: Logs out the current user by removing their session and all related cookies
 - **Success Response**:
   ```json
-    {
-      "status": "success",
-      "data": {
-        "message": "Logged out successfully"
-      }
+  {
+    "status": "success",
+    "data": {
+      "message": "Logged out successfully"
     }
+  }
   ```
 - **Effect**: This API không chỉ xóa session của người dùng trên server mà còn xóa các cookie liên quan đến phiên đăng nhập (`sessionid` và `csrftoken`) trên trình duyệt của người dùng
 
@@ -286,7 +295,7 @@ When toxic content is detected, a notification is sent to the user who attempted
       }
     ]
   }
-````
+  ```
 
 #### Get User Details
 
@@ -427,6 +436,44 @@ When toxic content is detected, a notification is sent to the user who attempted
   - `page`: Số trang (pagination)
 - **Description**: Lấy tất cả thread của một user (bao gồm cả thread do user tạo và thread user đã repost)
 - **Response**: Giống format của Get All Threads
+  ```json
+  {
+    "count": 1,
+    "next": null,
+    "previous": null,
+    "results": [
+      {
+        "id": 15,
+        "content": "Thread content",
+        "user": {
+          "id": 26,
+          "username": "NPThanh12345",
+          "email": "user@example.com",
+          "first_name": "John",
+          "last_name": "Doe",
+          "date_joined": "2025-05-12T19:12:21.871751+06:30",
+          "avatar": "https://img.freepik.com/premium-vector/user-profile-person-avatar-identity-login-icon-vector_1277826-995.jpg?w=360"
+        },
+        "created_at": "2025-05-15T19:53:34.325349+06:30",
+        "thread_images": [
+          {
+            "id": 9,
+            "image": "https://example.com/image1.jpg"
+          },
+          {
+            "id": 10,
+            "image": "https://example.com/image2.jpg"
+          }
+        ],
+        "likes_count": 0,
+        "is_liked": false,
+        "reposts_count": 1,
+        "is_reposted": true,
+        "comment_count": 0
+      }
+    ]
+  }
+  ```
 - **Error Responses**:
   - 400 Bad Request: Khi thiếu tham số `user_id`
   - 404 Not Found: Khi không tìm thấy user với ID đã cho
@@ -436,6 +483,7 @@ When toxic content is detected, a notification is sent to the user who attempted
 - **Endpoint**: `POST /api/threads/`
 - **Authentication**: Required
 - **Body**:
+
   ```json
   {
     "content": "Thread content",
@@ -446,9 +494,8 @@ When toxic content is detected, a notification is sent to the user who attempted
   }
   ```
 
-````
-
 - **Success Response**:
+
   ```json
   {
     "id": 1,
@@ -475,8 +522,6 @@ When toxic content is detected, a notification is sent to the user who attempted
   }
   ```
 
-````
-
 - **Error Response (Toxic Content)**:
   ```json
   {
@@ -486,8 +531,6 @@ When toxic content is detected, a notification is sent to the user who attempted
     }
   }
   ```
-
-````
 
 #### Like/Unlike Thread
 
@@ -501,8 +544,6 @@ When toxic content is detected, a notification is sent to the user who attempted
   }
   ```
 
-````
-
 #### Repost/Unrepost Thread
 
 - **Endpoint**: `POST /api/threads/{thread_id}/repost/`
@@ -514,8 +555,6 @@ When toxic content is detected, a notification is sent to the user who attempted
     "is_reposted": true
   }
   ```
-
-````
 
 #### Delete Thread
 
@@ -574,8 +613,6 @@ When toxic content is detected, a notification is sent to the user who attempted
   }
   ```
 
-````
-
 #### Get Replies for a Comment
 
 - **Endpoint**: `GET /api/threads/{thread_id}/comments/{comment_id}/replies/`
@@ -608,14 +645,13 @@ When toxic content is detected, a notification is sent to the user who attempted
 - **Endpoint**: `POST /api/threads/{thread_id}/comments/`
 - **Authentication**: Required
 - **Body**:
+
   ```json
   {
     "content": "Your comment content",
     "parent_comment_id": null
   }
   ```
-
-````
 
 - **Success Response**:
   ```json
@@ -638,8 +674,6 @@ When toxic content is detected, a notification is sent to the user who attempted
   }
   ```
 
-````
-
 #### Like/Unlike Comment
 
 - **Endpoint**: `POST /api/threads/{thread_id}/comments/{comment_id}/like/`
@@ -652,8 +686,6 @@ When toxic content is detected, a notification is sent to the user who attempted
   }
   ```
 
-````
-
 #### Repost/Unrepost Comment
 
 - **Endpoint**: `POST /api/threads/{thread_id}/comments/{comment_id}/repost/`
@@ -665,8 +697,6 @@ When toxic content is detected, a notification is sent to the user who attempted
     "is_reposted": true
   }
   ```
-
-````
 
 ### 4. Follow APIs (`/api/follows/`)
 
@@ -706,20 +736,17 @@ When toxic content is detected, a notification is sent to the user who attempted
   }
   ```
 
-````
-
 #### Follow/Unfollow User
 
 - **Endpoint**: `POST /api/follows/`
 - **Authentication**: Required
 - **Body**:
+
   ```json
   {
     "followed_id": 2
   }
   ```
-
-````
 
 - **Success Response**:
   ```json
@@ -748,8 +775,6 @@ When toxic content is detected, a notification is sent to the user who attempted
   }
   ```
 
-````
-
 #### Get Followers Count
 
 - **Endpoint**: `GET /api/follows/followers_count/`
@@ -761,7 +786,32 @@ When toxic content is detected, a notification is sent to the user who attempted
   }
   ```
 
-````
+#### Get User Follows Count
+
+- **Endpoint**: `GET /api/follows/user_follows_count/?user_id={user_id}`
+- **Authentication**: Required
+- **Query Params**:
+  - `user_id`: ID của user cần lấy thông tin số lượng follow
+- **Response**:
+  ```json
+  {
+    "followers_count": 120, // Số người đang follow user này
+    "following_count": 85 // Số người mà user này follow
+  }
+  ```
+
+#### Check Follow Status
+
+- **Endpoint**: `GET /api/follows/check_status/?user_id={user_id}`
+- **Authentication**: Required
+- **Query Params**:
+  - `user_id`: ID của user cần kiểm tra trạng thái follow
+- **Response**:
+  ```json
+  {
+    "is_followed": true
+  }
+  ```
 
 ### 5. Notification APIs (`/api/notifications/`)
 
@@ -803,7 +853,9 @@ When toxic content is detected, a notification is sent to the user who attempted
   }
   ```
 
-````
+```
+
+```
 
 #### Get Unread Notification Count
 
@@ -816,7 +868,9 @@ When toxic content is detected, a notification is sent to the user who attempted
   }
   ```
 
-````
+```
+
+```
 
 #### Mark Notification as Read
 
@@ -830,7 +884,9 @@ When toxic content is detected, a notification is sent to the user who attempted
   }
   ```
 
-````
+```
+
+```
 
 #### Mark All Notifications as Read
 
@@ -843,7 +899,9 @@ When toxic content is detected, a notification is sent to the user who attempted
   }
   ```
 
-````
+```
+
+```
 
 #### Get Unread Notifications
 
@@ -1073,7 +1131,9 @@ Authentication methods supported:
   }
   ```
 
-````
+```
+
+```
 
 ### Pagination
 
@@ -1105,4 +1165,7 @@ Status codes:
 5. Run migrations: `python manage.py migrate`
 6. Create superuser: `python manage.py createsuperuser`
 7. Run server: `python manage.py runserver`
-````
+
+```
+
+```
