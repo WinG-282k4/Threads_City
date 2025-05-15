@@ -300,11 +300,43 @@ When toxic content is detected, a notification is sent to the user who attempted
     "first_name": "First",
     "last_name": "Last",
     "email": "email@example.com",
-    "avatar": "url_to_avatar_image"
+    "avatar": "url_to_avatar_image",
+    "threads": [
+      {
+        "id": 1,
+        "content": "Thread content",
+        "created_at": "2024-03-21T10:00:00Z",
+        "likes_count": 5,
+        "reposts_count": 3,
+        "comment_count": 10,
+        "images": [
+          {
+            "id": 1,
+            "image": "url_to_thread_image"
+          }
+        ]
+      }
+    ],
+    "reposted_threads": [
+      {
+        "id": 2,
+        "content": "Reposted thread content",
+        "created_at": "2024-03-22T10:00:00Z",
+        "likes_count": 8,
+        "reposts_count": 4,
+        "comment_count": 12,
+        "images": [
+          {
+            "id": 2,
+            "image": "url_to_reposted_thread_image"
+          }
+        ]
+      }
+    ],
+    "is_followed": true,
+    "followers_count": 120
   }
   ```
-
-````
 
 ### 2. Thread APIs (`/api/threads/`)
 
@@ -824,21 +856,25 @@ When toxic content is detected, a notification is sent to the user who attempted
 ### WebSocket/Real-time Updates
 
 The application supports real-time updates using WebSockets. The implementation automatically switches between:
+
 - **Django Channels**: Used in development/local environment
 - **Pusher**: Used when deployed on PythonAnywhere (which doesn't support WebSockets on free tiers)
 
 #### Connection Details
 
 ##### Django Channels (Local Development)
+
 - **Thread Channel**: `ws://localhost:8000/ws/thread/{thread_id}/`
 - **User Notification Channel**: `ws://localhost:8000/ws/user/{user_id}/`
 
 ##### Pusher (Production/PythonAnywhere)
+
 - **Thread Channel**: `thread_{thread_id}`
 - **User Notification Channel**: `user_{user_id}`
 - **Events**: Same event names as Django Channels
 
 #### Authentication
+
 - **Django Channels**: Authentication via session cookie (`sessionid`)
 - **Pusher**: Client-side subscription with public key
 
@@ -847,6 +883,7 @@ The application supports real-time updates using WebSockets. The implementation 
 ##### Thread Updates
 
 1. **Like Update**
+
    - **Event**: `like_update`
    - **Data**:
      ```json
@@ -859,6 +896,7 @@ The application supports real-time updates using WebSockets. The implementation 
      ```
 
 2. **Comment Like Update**
+
    - **Event**: `like_update`
    - **Data**:
      ```json
@@ -872,6 +910,7 @@ The application supports real-time updates using WebSockets. The implementation 
      ```
 
 3. **New Comment**
+
    - **Event**: `comment_update`
    - **Data**:
      ```json
@@ -892,6 +931,7 @@ The application supports real-time updates using WebSockets. The implementation 
      ```
 
 4. **Comment Deleted**
+
    - **Event**: `comment_update`
    - **Data**:
      ```json
@@ -933,18 +973,19 @@ The application supports real-time updates using WebSockets. The implementation 
 #### Frontend Implementation
 
 ##### Pusher (JavaScript Example)
+
 ```javascript
 // Initialize Pusher
-const pusher = new Pusher('your_pusher_key', {
-  cluster: 'your_pusher_cluster',
-  forceTLS: true
+const pusher = new Pusher("your_pusher_key", {
+  cluster: "your_pusher_cluster",
+  forceTLS: true,
 });
 
 // Subscribe to a thread channel
 const threadChannel = pusher.subscribe(`thread_${threadId}`);
 
 // Listen for like updates
-threadChannel.bind('like_update', function(data) {
+threadChannel.bind("like_update", function (data) {
   // Update UI with new like count
   console.log(`Thread ${data.thread_id} now has ${data.likes_count} likes`);
 });
@@ -953,25 +994,28 @@ threadChannel.bind('like_update', function(data) {
 const userChannel = pusher.subscribe(`user_${userId}`);
 
 // Listen for new notifications
-userChannel.bind('notification_update', function(data) {
+userChannel.bind("notification_update", function (data) {
   // Update UI with new notification
   console.log(`New notification: ${data.content}`);
 });
 ```
 
 ##### Django Channels (JavaScript WebSocket Example)
+
 ```javascript
 // Connect to thread WebSocket
-const threadSocket = new WebSocket(`ws://localhost:8000/ws/thread/${threadId}/`);
+const threadSocket = new WebSocket(
+  `ws://localhost:8000/ws/thread/${threadId}/`
+);
 
 // Handle messages
-threadSocket.onmessage = function(e) {
+threadSocket.onmessage = function (e) {
   const data = JSON.parse(e.data);
 
-  if (data.type === 'like_update') {
+  if (data.type === "like_update") {
     // Update UI with new like count
     console.log(`Thread ${data.thread_id} now has ${data.likes_count} likes`);
-  } else if (data.type === 'comment_update') {
+  } else if (data.type === "comment_update") {
     // Handle comment updates
     console.log(`New comment on thread ${data.thread_id}`);
   }
@@ -981,10 +1025,10 @@ threadSocket.onmessage = function(e) {
 const userSocket = new WebSocket(`ws://localhost:8000/ws/user/${userId}/`);
 
 // Handle notifications
-userSocket.onmessage = function(e) {
+userSocket.onmessage = function (e) {
   const data = JSON.parse(e.data);
 
-  if (data.type === 'notification_update') {
+  if (data.type === "notification_update") {
     // Update UI with new notification
     console.log(`New notification: ${data.content}`);
   }
@@ -1060,3 +1104,4 @@ Status codes:
 5. Run migrations: `python manage.py migrate`
 6. Create superuser: `python manage.py createsuperuser`
 7. Run server: `python manage.py runserver`
+````

@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from .models import MyUser
+from thread.models import Thread, Follow
 
 class UserSerializer(serializers.ModelSerializer):
     avatar = serializers.SerializerMethodField()
@@ -15,6 +16,45 @@ class UserSerializer(serializers.ModelSerializer):
         if hasattr(obj, 'myuser') and obj.myuser.link:
             return obj.myuser.link
         return None
+
+class UserDetailSerializer(serializers.ModelSerializer):
+    avatar = serializers.SerializerMethodField()
+    threads = serializers.SerializerMethodField()
+    reposted_threads = serializers.SerializerMethodField()
+    is_followed = serializers.SerializerMethodField()
+    followers_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'date_joined', 'avatar', 
+                 'threads', 'reposted_threads', 'is_followed', 'followers_count']
+        read_only_fields = ['id', 'date_joined']
+
+    def get_avatar(self, obj):
+        if hasattr(obj, 'myuser') and obj.myuser.link:
+            return obj.myuser.link
+        return None
+        
+    def get_threads(self, obj):
+        from thread.serializers import ThreadSerializer
+        threads = Thread.objects.filter(user=obj)
+        return ThreadSerializer(threads, many=True, context=self.context).data
+        
+    def get_reposted_threads(self, obj):
+        from thread.serializers import ThreadSerializer
+        reposted_threads = obj.reposted_threads.all()
+        return ThreadSerializer(reposted_threads, many=True, context=self.context).data
+        
+    def get_is_followed(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            if request.user == obj:  # User can't follow themselves
+                return False
+            return Follow.objects.filter(follower=request.user, followed=obj).exists()
+        return False
+        
+    def get_followers_count(self, obj):
+        return Follow.objects.filter(followed=obj).count()
 
 class UserCreateSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])

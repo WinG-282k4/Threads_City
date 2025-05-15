@@ -835,6 +835,12 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
             )
             
         return queryset
+        
+    def get_serializer_class(self):
+        if self.action == 'retrieve':  # For GET /api/users/{id}/
+            from accounts.serializers import UserDetailSerializer
+            return UserDetailSerializer
+        return self.serializer_class
 
     @action(detail=False, methods=['get'])
     def search(self, request):
