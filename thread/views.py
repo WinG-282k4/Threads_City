@@ -543,6 +543,15 @@ class ThreadViewSet(viewsets.ModelViewSet):
     queryset = Thread.objects.all()
     serializer_class = ThreadSerializer
     permission_classes = [permissions.IsAuthenticated]
+    
+    def get_permissions(self):
+        """
+        Allow unauthenticated access to list and feed actions.
+        Require authentication for all other actions.
+        """
+        if self.action in ['list', 'feed']:
+            return []
+        return [permission() for permission in self.permission_classes]
 
     def perform_create(self, serializer):
         # Check toxic content before creating thread
