@@ -293,50 +293,51 @@ When toxic content is detected, a notification is sent to the user who attempted
 - **Endpoint**: `GET /api/users/{user_id}/`
 - **Authentication**: Required
 - **Response**:
-  ```json
-  {
-    "id": 1,
-    "username": "username",
-    "first_name": "First",
-    "last_name": "Last",
-    "email": "email@example.com",
-    "avatar": "url_to_avatar_image",
-    "threads": [
-      {
-        "id": 1,
-        "content": "Thread content",
-        "created_at": "2024-03-21T10:00:00Z",
-        "likes_count": 5,
-        "reposts_count": 3,
-        "comment_count": 10,
-        "images": [
-          {
-            "id": 1,
-            "image": "url_to_thread_image"
-          }
-        ]
-      }
-    ],
-    "reposted_threads": [
-      {
-        "id": 2,
-        "content": "Reposted thread content",
-        "created_at": "2024-03-22T10:00:00Z",
-        "likes_count": 8,
-        "reposts_count": 4,
-        "comment_count": 12,
-        "images": [
-          {
-            "id": 2,
-            "image": "url_to_reposted_thread_image"
-          }
-        ]
-      }
-    ],
-    "is_followed": true,
-    "followers_count": 120
-  }
-  ```
+
+```json
+{
+  "id": 1,
+  "username": "username",
+  "first_name": "First",
+  "last_name": "Last",
+  "email": "email@example.com",
+  "avatar": "url_to_avatar_image",
+  "threads": [
+    {
+      "id": 1,
+      "content": "Thread content",
+      "created_at": "2024-03-21T10:00:00Z",
+      "likes_count": 5,
+      "reposts_count": 3,
+      "comment_count": 10,
+      "images": [
+        {
+          "id": 1,
+          "image": "url_to_thread_image"
+        }
+      ]
+    }
+  ],
+  "reposted_threads": [
+    {
+      "id": 2,
+      "content": "Reposted thread content",
+      "created_at": "2024-03-22T10:00:00Z",
+      "likes_count": 8,
+      "reposts_count": 4,
+      "comment_count": 12,
+      "images": [
+        {
+          "id": 2,
+          "image": "url_to_reposted_thread_image"
+        }
+      ]
+    }
+  ],
+  "is_followed": true,
+  "followers_count": 120
+}
+```
 
 ### 2. Thread APIs (`/api/threads/`)
 
