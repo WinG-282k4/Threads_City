@@ -269,7 +269,7 @@ When toxic content is detected, a notification is sent to the user who attempted
     }
   }
   ```
-- **Effect**: This API không chỉ xóa session của người dùng trên server mà còn xóa các cookie liên quan đến phiên đăng nhập (`sessionid` và `csrftoken`) trên trình duyệt của người dùng
+- **Effect**: This API not only removes the user's session on the server but also clears the session-related cookies (`sessionid` and `csrftoken`) on the user's browser
 
 #### Search Users
 
@@ -408,34 +408,34 @@ When toxic content is detected, a notification is sent to the user who attempted
 - **Endpoint**: `GET /api/threads/my_threads/`
 - **Authentication**: Required
 - **Query Params**: `?page=1` (pagination)
-- **Description**: Lấy tất cả thread do user hiện tại tạo
-- **Response**: Giống format của Get All Threads
+- **Description**: Get all threads created by the current user
+- **Response**: Same format as Get All Threads
 
 #### Get My Commented Threads
 
 - **Endpoint**: `GET /api/threads/my_commented_threads/`
 - **Authentication**: Required
 - **Query Params**: `?page=1` (pagination)
-- **Description**: Lấy tất cả thread mà user hiện tại đã comment (không bao gồm thread do user tạo)
-- **Response**: Giống format của Get All Threads
+- **Description**: Get all threads that the current user has commented on (excluding threads created by the user)
+- **Response**: Same format as Get All Threads
 
 #### Get My Reposted Threads
 
 - **Endpoint**: `GET /api/threads/my_reposted_threads/`
 - **Authentication**: Required
 - **Query Params**: `?page=1` (pagination)
-- **Description**: Lấy tất cả thread mà user hiện tại đã repost
-- **Response**: Giống format của Get All Threads
+- **Description**: Get all threads that the current user has reposted
+- **Response**: Same format as Get All Threads
 
 #### Get User Threads
 
 - **Endpoint**: `GET /api/threads/user_threads/`
 - **Authentication**: Required
 - **Query Params**:
-  - `user_id`: ID của user cần lấy thread
-  - `page`: Số trang (pagination)
-- **Description**: Lấy tất cả thread của một user (bao gồm cả thread do user tạo và thread user đã repost)
-- **Response**: Giống format của Get All Threads
+  - `user_id`: ID of the user whose threads you want to retrieve
+  - `page`: Page number (pagination)
+- **Description**: Get all threads of a user (including both threads created by the user and threads the user has reposted)
+- **Response**: Same format as Get All Threads
   ```json
   {
     "count": 1,
@@ -475,8 +475,8 @@ When toxic content is detected, a notification is sent to the user who attempted
   }
   ```
 - **Error Responses**:
-  - 400 Bad Request: Khi thiếu tham số `user_id`
-  - 404 Not Found: Khi không tìm thấy user với ID đã cho
+  - 400 Bad Request: When `user_id` parameter is missing
+  - 404 Not Found: When user with the given ID is not found
 
 #### Create Thread
 
@@ -791,12 +791,12 @@ When toxic content is detected, a notification is sent to the user who attempted
 - **Endpoint**: `GET /api/follows/user_follows_count/?user_id={user_id}`
 - **Authentication**: Required
 - **Query Params**:
-  - `user_id`: ID của user cần lấy thông tin số lượng follow
+  - `user_id`: ID of the user whose follow counts you want to retrieve
 - **Response**:
   ```json
   {
-    "followers_count": 120, // Số người đang follow user này
-    "following_count": 85 // Số người mà user này follow
+    "followers_count": 120, // Number of users following this user
+    "following_count": 85 // Number of users this user is following
   }
   ```
 
@@ -805,7 +805,7 @@ When toxic content is detected, a notification is sent to the user who attempted
 - **Endpoint**: `GET /api/follows/check_status/?user_id={user_id}`
 - **Authentication**: Required
 - **Query Params**:
-  - `user_id`: ID của user cần kiểm tra trạng thái follow
+  - `user_id`: ID of the user whose follow status you want to check
 - **Response**:
   ```json
   {
