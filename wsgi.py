@@ -1,10 +1,6 @@
 """
 WSGI config for core project.
-
 It exposes the WSGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/4.2/howto/deployment/wsgi/
 """
 
 import os
@@ -25,4 +21,4 @@ except Exception as e:
     print(f"Error loading WSGI application: {e}")
     import traceback
     print(traceback.format_exc())
-    raise
+    raise 
