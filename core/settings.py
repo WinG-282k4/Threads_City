@@ -285,3 +285,5 @@ if not ON_PYTHONANYWHERE:
             "BACKEND": "channels.layers.InMemoryChannelLayer"
         }
     }
+
+print("▶ Using DB HOST:", os.getenv("DB_HOST"))
