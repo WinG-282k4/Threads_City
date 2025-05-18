@@ -199,7 +199,8 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
     'https://www.postman.com',
-    'https://v0-clone-threads.vercel.app'
+    'https://v0-clone-threads.vercel.app',
+    'https://thread-clone.onrender.com'
 ]
 
 # CORS settings
@@ -218,7 +219,8 @@ CORS_ALLOWED_ORIGINS = [
     "https://wing2k4.pythonanywhere.com",
     "http://wing2k4.pythonanywhere.com",
     "https://www.postman.com",
-    "https://v0-clone-threads.vercel.app"
+    "https://v0-clone-threads.vercel.app",
+    "https://thread-clone.onrender.com"
 ]
 
 CORS_ALLOW_CREDENTIALS = True  # Allow sending credentials (cookies)
