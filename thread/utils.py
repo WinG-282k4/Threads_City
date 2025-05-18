@@ -74,7 +74,6 @@ def success_response(data=None):
 def check_toxic_content(text):
     try:
         response = requests.post(
-            # 'http://givoxxs.id.vn/classify',
             os.getenv('TOXIC_CLASSIFIER_URL'),
             headers={
                 'accept': 'application/json',
