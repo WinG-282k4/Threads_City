@@ -1,5 +1,6 @@
 from .models import Thread, ThreadImage, Comment, CommentImage
 import requests
+import os
 from rest_framework.response import Response
 from rest_framework import status
 from django.core.exceptions import ValidationError
@@ -73,7 +74,8 @@ def success_response(data=None):
 def check_toxic_content(text):
     try:
         response = requests.post(
-            'http://givoxxs.id.vn/classify',
+            # 'http://givoxxs.id.vn/classify',
+            os.getenv('TOXIC_CLASSIFIER_URL'),
             headers={
                 'accept': 'application/json',
                 'Content-Type': 'application/json'
