@@ -106,52 +106,57 @@ def create_thread(request):
                 request, "You have to provide some content to create thread."
             )
             return redirect("thread:feed")
-        # One unit case, just create a thread
-        if len(content_list) == 1:
-            # create thread
-            thread = create_thread_post(content_list[0], request.user)
-            create_thread_images(image_list, thread)
-        # Two unit case, create thread and create comment
-        if len(content_list) == 2:
-            # create thread
-            thread = create_thread_post(content_list[0], request.user)
-            right = int(image_count_list[0])
-            create_thread_images(image_list[:right], thread)
-            # create comment
-            comment = create_cmt(content_list[1], request.user, thread)
-            left = int(image_count_list[0])
-            right = left + int(image_count_list[1])
-            create_cmt_images(image_list[left:right], comment)
-        # More thatn two units, create thread, comment and child cmts
-        if len(content_list) > 2:
-            # create thread
-            thread = create_thread_post(content_list[0], request.user)
-            right = int(image_count_list[0])
-            create_thread_images(image_list[:right], thread)
-            # create parent comment
-            comment = create_cmt(content_list[1], request.user, thread)
-            left = int(image_count_list[0])
-            right = left + int(image_count_list[1])
-            create_cmt_images(image_list[left:right], comment)
-            # create child comments
-            i = 2
-            previous_cmt = comment  # Keep track of the previous comment
-            while i < len(content_list):
-                child_cmt = create_cmt(
-                    content=content_list[i],
-                    user=request.user,
-                    thread=thread,
-                    parent_comment=previous_cmt,  # Use the previous comment as parent
-                )
-                left = 0
-                for j in range(i):
-                    left += int(image_count_list[j])
-                right = left + int(image_count_list[i])
-                create_cmt_images(image_list=image_list[left:right], comment=child_cmt)
-                previous_cmt = child_cmt  # Update previous comment for next iteration
-                i += 1
+        
+        try:
+            # One unit case, just create a thread
+            if len(content_list) == 1:
+                # create thread
+                thread = create_thread_post(content_list[0], request.user)
+                create_thread_images(image_list, thread)
+            # Two unit case, create thread and create comment
+            if len(content_list) == 2:
+                # create thread
+                thread = create_thread_post(content_list[0], request.user)
+                right = int(image_count_list[0])
+                create_thread_images(image_list[:right], thread)
+                # create comment
+                comment = create_cmt(content_list[1], request.user, thread)
+                left = int(image_count_list[0])
+                right = left + int(image_count_list[1])
+                create_cmt_images(image_list[left:right], comment)
+            # More thatn two units, create thread, comment and child cmts
+            if len(content_list) > 2:
+                # create thread
+                thread = create_thread_post(content_list[0], request.user)
+                right = int(image_count_list[0])
+                create_thread_images(image_list[:right], thread)
+                # create parent comment
+                comment = create_cmt(content_list[1], request.user, thread)
+                left = int(image_count_list[0])
+                right = left + int(image_count_list[1])
+                create_cmt_images(image_list[left:right], comment)
+                # create child comments
+                i = 2
+                previous_cmt = comment  # Keep track of the previous comment
+                while i < len(content_list):
+                    child_cmt = create_cmt(
+                        content=content_list[i],
+                        user=request.user,
+                        thread=thread,
+                        parent_comment=previous_cmt,  # Use the previous comment as parent
+                    )
+                    left = 0
+                    for j in range(i):
+                        left += int(image_count_list[j])
+                    right = left + int(image_count_list[i])
+                    create_cmt_images(image_list=image_list[left:right], comment=child_cmt)
+                    previous_cmt = child_cmt  # Update previous comment for next iteration
+                    i += 1
 
-        messages.success(request, "Thread created successfully.")
+            messages.success(request, "Thread created successfully.")
+        except ValidationError as e:
+            messages.error(request, str(e))
+        
         return redirect("thread:feed")
     else:
         return redirect("thread:feed")
@@ -209,47 +214,42 @@ def create_reply(request):
                 request, "You have to provide some content to create reply."
             )
             return redirect("thread:feed")
-        # One comment case
-        cmt = create_cmt(
-            content=content_list[0],
-            user=request.user,
-            thread=thread,
-            parent_comment=parent_comment,
-        )
-        create_cmt_images(
-            image_list=image_list[: int(image_count_list[0])], comment=cmt
-        )
-        # More than one comment case
-        if len(content_list) > 1:
-            i = 1
-            while i < len(content_list):
-                child_cmt = create_cmt(
-                    content=content_list[i],
-                    user=request.user,
-                    thread=thread,
-                    parent_comment=parent_comment,  # Use the same parent_comment for all replies
-                )
-                left = 0
-                for j in range(i):
-                    left += int(image_count_list[j])
-                right = left + int(image_count_list[i])
-                create_cmt_images(image_list=image_list[left:right], comment=child_cmt)
-                i += 1
-
-        messages.success(request, "Reply created successfully.")
-
-        if parent_comment:
-            return redirect(
-                "thread:get_reply",
-                username=parent_comment.user.username,
-                id=int(comment_id),
+        
+        try:
+            # One comment case
+            cmt = create_cmt(
+                content=content_list[0],
+                user=request.user,
+                thread=thread,
+                parent_comment=parent_comment,
             )
-        else:
-            return redirect(
-                "thread:get_thread", username=thread.user.username, id=int(thread_id)
+            create_cmt_images(
+                image_list=image_list[: int(image_count_list[0])], comment=cmt
             )
+            # More than one comment case
+            if len(content_list) > 1:
+                i = 1
+                while i < len(content_list):
+                    child_cmt = create_cmt(
+                        content=content_list[i],
+                        user=request.user,
+                        thread=thread,
+                        parent_comment=parent_comment,  # Use the same parent_comment for all replies
+                    )
+                    left = 0
+                    for j in range(i):
+                        left += int(image_count_list[j])
+                    right = left + int(image_count_list[i])
+                    create_cmt_images(image_list=image_list[left:right], comment=child_cmt)
+                    i += 1
 
-    return redirect("thread:feed")
+            messages.success(request, "Reply created successfully.")
+        except ValidationError as e:
+            messages.error(request, str(e))
+            
+        return redirect("thread:detail", thread_id=thread_id)
+    else:
+        return redirect("thread:feed")
 
 
 @login_required

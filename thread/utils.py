@@ -2,9 +2,24 @@ from .models import Thread, ThreadImage, Comment, CommentImage
 import requests
 from rest_framework.response import Response
 from rest_framework import status
+from django.core.exceptions import ValidationError
 
 
 def create_thread_post(content, user):
+    # Check for toxic content
+    if check_toxic_content(content):
+        # Create notification for the user who posted toxic content
+        from .models import Notification
+        Notification.objects.create(
+            user=user,
+            type="toxic_content",
+            content=f"Bài viết của bạn vi phạm tiêu chuẩn cộng đồng và đã bị từ chối",
+            actioner=user
+        )
+        
+        # Raise validation error
+        raise ValidationError("Bài viết của bạn vi phạm tiêu chuẩn cộng đồng")
+    
     thread = Thread(content=content)
     thread.user = user
     thread.save()
@@ -18,6 +33,20 @@ def create_thread_images(image_list, thread):
 
 
 def create_cmt(content, user, thread, parent_comment=None):
+    # Check for toxic content
+    if check_toxic_content(content):
+        # Create notification for the user who posted toxic content
+        from .models import Notification
+        Notification.objects.create(
+            user=user,
+            type="toxic_content",
+            content=f"Bình luận của bạn vi phạm tiêu chuẩn cộng đồng và đã bị từ chối",
+            actioner=user
+        )
+        
+        # Raise validation error
+        raise ValidationError("Bình luận của bạn vi phạm tiêu chuẩn cộng đồng")
+    
     comment = Comment(content=content)
     comment.user = user
     comment.thread = thread
