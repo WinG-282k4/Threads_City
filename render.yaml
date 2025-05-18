@@ -3,10 +3,12 @@ services:
     name: thread-clone
     env: python
     buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
-    startCommand: daphne -b 0.0.0.0 -p $PORT core.asgi:application
+    startCommand: DJANGO_SETTINGS_MODULE=core.settings daphne -b 0.0.0.0 -p $PORT core.asgi:application
     envVars:
       - key: PYTHON_VERSION
         value: 3.10.0
+      - key: DJANGO_SETTINGS_MODULE
+        value: core.settings
       - key: SECRET_KEY
         sync: false
       - key: DEBUG
