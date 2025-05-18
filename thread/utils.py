@@ -73,7 +73,7 @@ def success_response(data=None):
 def check_toxic_content(text):
     try:
         response = requests.post(
-            'http://4.217.235.17/classify',
+            'http://givoxxs.id.vn/classify',
             headers={
                 'accept': 'application/json',
                 'Content-Type': 'application/json'
