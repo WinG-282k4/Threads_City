@@ -8,21 +8,10 @@ https://docs.djangoproject.com/en/4.2/howto/deployment/wsgi/
 """
 
 import os
-import sys
-print("WSGI Starting...")
-print(f"DJANGO_SETTINGS_MODULE={os.environ.get('DJANGO_SETTINGS_MODULE', 'Not set')}")
-print(f"Current working directory: {os.getcwd()}")
-print(f"Python path: {sys.path}")
+import django
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
-print(f"After setdefault: DJANGO_SETTINGS_MODULE={os.environ.get('DJANGO_SETTINGS_MODULE')}")
+django.setup()  # Thiết lập Django trước khi import models
 
-try:
-    from django.core.wsgi import get_wsgi_application
-    application = get_wsgi_application()
-    print("WSGI application loaded successfully!")
-except Exception as e:
-    print(f"Error loading WSGI application: {e}")
-    import traceback
-    print(traceback.format_exc())
-    raise
+from django.core.wsgi import get_wsgi_application
+application = get_wsgi_application()

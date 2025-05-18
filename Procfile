@@ -1,1 +1,1 @@
-web: DJANGO_SETTINGS_MODULE=core.settings daphne -b 0.0.0.0 -p $PORT core.asgi:application 
+web: PYTHONPATH=/opt/render/project/src DJANGO_SETTINGS_MODULE=core.settings gunicorn core.wsgi:application --bind 0.0.0.0:$PORT 
