@@ -577,36 +577,25 @@ class ThreadViewSet(viewsets.ModelViewSet):
         return thread
 
     def destroy(self, request, *args, **kwargs):
+        thread_id = self.kwargs.get('pk')
         try:
-            # Lấy thread từ ID và kiểm tra xem nó có tồn tại không
-            thread_id = self.kwargs.get('pk')
-            try:
-                thread = Thread.objects.get(id=thread_id)
-            except Thread.DoesNotExist:
-                return Response(
-                    {"status": "error", "errors": {"detail": "Thread không tồn tại"}},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            
-            # Check if user is the owner of the thread
-            if thread.user != request.user:
-                return Response(
-                    {"status": "error", "errors": {"detail": "You can only delete your own threads"}},
-                    status=status.HTTP_403_FORBIDDEN
-                )
-                
-            # Delete the thread
-            thread.delete()
-            
+            thread = Thread.objects.get(id=thread_id)
+        except Thread.DoesNotExist:
             return Response(
-                {"status": "success", "data": {"message": "Thread deleted successfully"}},
-                status=status.HTTP_200_OK
+                {"status": "error", "errors": {"detail": "Thread không tồn tại"}},
+                status=status.HTTP_404_NOT_FOUND
             )
-        except Exception as e:
+        if thread.user != request.user:
             return Response(
-                {"status": "error", "errors": {"detail": str(e)}},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"status": "error", "errors": {"detail": "You can only delete your own threads"}},
+                status=status.HTTP_403_FORBIDDEN
             )
+        # Comment.objects.filter(thread=thread).delete()
+        thread.delete()
+        return Response(
+            {"status": "success", "data": {"message": "Thread deleted successfully"}},
+            status=status.HTTP_200_OK
+        )
 
     @action(detail=False, methods=['get'])
     def feed(self, request):
