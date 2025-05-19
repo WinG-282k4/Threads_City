@@ -763,8 +763,10 @@ class CommentViewSet(viewsets.ModelViewSet):
         like, created = LikeComment.objects.get_or_create(comment=comment, user=request.user)
         if not created:
             like.delete()
-        # Refresh comment instance to get updated likes_count from database
-        comment.refresh_from_db()
+        try:
+            comment.refresh_from_db()
+        except Comment.DoesNotExist:
+            pass
         return Response({
             'likes_count': comment.likes_count,
             'is_liked': comment.liked_users.filter(id=request.user.id).exists()

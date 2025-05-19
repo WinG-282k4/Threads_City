@@ -231,9 +231,7 @@ def notify_delete_comment(sender, instance, **kwargs):
     # Handle different cases for direct thread comments and replies
     if not instance.parent_comment:
         thread = instance.thread
-        thread.refresh_from_db()
-        
-        # Send WebSocket/Pusher update with the current comment count
+        # KHÔNG refresh_from_db vì thread có thể đã bị xóa
         channel_group_send(
             f'thread_{thread.id}',
             {
@@ -247,9 +245,7 @@ def notify_delete_comment(sender, instance, **kwargs):
         )
     else:
         parent_comment = instance.parent_comment
-        parent_comment.refresh_from_db()
-        
-        # Send WebSocket/Pusher update with the current reply count
+        # KHÔNG refresh_from_db vì parent_comment có thể đã bị xóa
         channel_group_send(
             f'thread_{instance.thread.id}',
             {
