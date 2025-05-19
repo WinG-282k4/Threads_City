@@ -291,7 +291,8 @@ When toxic content is detected, a notification is sent to the user who attempted
         "first_name": "First",
         "last_name": "Last",
         "email": "email@example.com",
-        "avatar": "url_to_avatar_image"
+        "avatar": "url_to_avatar_image",
+        "is_followed": true
       }
     ]
   }
@@ -813,6 +814,33 @@ When toxic content is detected, a notification is sent to the user who attempted
   }
   ```
 
+#### Get Followers of a User
+
+- **Endpoint**: `GET /api/follows/followers/?user_id={user_id}&page=1`
+- **Authentication**: Required
+- **Query Params**:
+  - `user_id`: ID of the user whose followers you want to retrieve
+  - `page`: Page number for pagination
+- **Response**:
+  ```json
+  {
+    "count": 10,
+    "next": "http://api.example.org/follows/followers/?user_id=2&page=2",
+    "previous": null,
+    "results": [
+      {
+        "id": 1,
+        "username": "username",
+        "first_name": "First",
+        "last_name": "Last",
+        "email": "email@example.com",
+        "avatar": "url_to_avatar_image",
+        "is_followed": false
+      }
+    ]
+  }
+  ```
+
 ### 5. Notification APIs (`/api/notifications/`)
 
 #### Get Notifications
@@ -1130,10 +1158,6 @@ Authentication methods supported:
     }
   }
   ```
-
-```
-
-```
 
 ### Pagination
 

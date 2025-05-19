@@ -6,16 +6,26 @@ from thread.models import Thread, Follow
 
 class UserSerializer(serializers.ModelSerializer):
     avatar = serializers.SerializerMethodField()
+    is_followed = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'date_joined', 'avatar']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'date_joined', 'avatar', 'is_followed']
         read_only_fields = ['id', 'date_joined']
 
     def get_avatar(self, obj):
         if hasattr(obj, 'myuser') and obj.myuser.link:
             return obj.myuser.link
         return None
+
+    def get_is_followed(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            if request.user == obj:
+                return False
+            from thread.models import Follow
+            return Follow.objects.filter(follower=request.user, followed=obj).exists()
+        return False
 
 class UserDetailSerializer(serializers.ModelSerializer):
     avatar = serializers.SerializerMethodField()
