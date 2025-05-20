@@ -349,16 +349,71 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_permissions(self):
-        if self.action in ['create', 'login']:
-            return []
+        """
+        Override to allow anyone to register by overriding the permissions
+        on the 'create' action. Also, allow forgot_password to be accessed
+        without authentication.
+        """
+        if self.action in ['create', 'forgot_password', 'login']:
+            return [permissions.AllowAny()]
         return [permission() for permission in self.permission_classes]
 
     def get_serializer_class(self):
         if self.action == 'create':
             return UserCreateSerializer
-        elif self.action == 'update' or self.action == 'partial_update':
+        elif self.action == 'update_me':
             return UserUpdateSerializer
-        return UserSerializer
+        elif self.action == 'change_password':
+            return ChangePasswordSerializer
+        return self.serializer_class
+
+    @action(detail=False, methods=['post'])
+    def forgot_password(self, request):
+        from thread.utils import generate_random_password, send_password_reset_email
+        
+        email = request.data.get('email')
+        username = request.data.get('username')
+
+        if not email or not username:
+            return Response({
+                'status': 'error',
+                'errors': {
+                    'detail': 'Both email and username are required'
+                }
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(email=email, username=username)
+        except User.DoesNotExist:
+            return Response({
+                'status': 'error',
+                'errors': {
+                    'detail': 'No user found with this email and username combination'
+                }
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        # Generate new random password
+        new_password = generate_random_password()
+        
+        # Update user's password
+        user.set_password(new_password)
+        user.save()
+
+        # Send email with new password
+        if send_password_reset_email(user.email, new_password):
+            return Response({
+                'status': 'success',
+                'data': {
+                    'message': 'New password has been sent to your email'
+                }
+            })
+        else:
+            return Response({
+                'status': 'error',
+                'errors': {
+                    'detail': 'Failed to send email. Please try again later.'
+                }
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @method_decorator(csrf_exempt)
     @action(detail=False, methods=['post'])

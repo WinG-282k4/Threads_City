@@ -4,6 +4,10 @@ import os
 from rest_framework.response import Response
 from rest_framework import status
 from django.core.exceptions import ValidationError
+import string
+import random
+from django.core.mail import send_mail
+from django.conf import settings
 
 
 def create_thread_post(content, user):
@@ -86,4 +90,42 @@ def check_toxic_content(text):
         return result.get('is_toxic', False)
     except Exception as e:
         print(f"Error checking toxic content: {str(e)}")
+        return False
+
+
+def generate_random_password(length=12):
+    """Generate a random password with specified length"""
+    characters = string.ascii_letters + string.digits + string.punctuation
+    return ''.join(random.choice(characters) for _ in range(length))
+
+
+def send_password_reset_email(user_email, new_password):
+    """Send email with new password to user"""
+    subject = 'Password Reset - Thread Clone'
+    message = f'''
+    Hello,
+
+    Your password has been reset. Here is your new password:
+
+    {new_password}
+
+    Please login with this password and change it immediately for security reasons.
+
+    Best regards,
+    Thread Clone Team
+    '''
+    from_email = settings.DEFAULT_FROM_EMAIL
+    recipient_list = [user_email]
+    
+    try:
+        send_mail(
+            subject,
+            message,
+            from_email,
+            recipient_list,
+            fail_silently=False,
+        )
+        return True
+    except Exception as e:
+        print(f"Error sending email: {e}")
         return False

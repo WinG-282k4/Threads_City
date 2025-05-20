@@ -349,6 +349,36 @@ When toxic content is detected, a notification is sent to the user who attempted
 }
 ```
 
+#### Forgot Password
+
+- **Endpoint**: `POST /api/auth/users/forgot_password/`
+- **Authentication**: Not Required
+- **Body**:
+  ```json
+  {
+    "email": "user@example.com",
+    "username": "username"
+  }
+  ```
+- **Success Response**:
+  ```json
+  {
+    "status": "success",
+    "data": {
+      "message": "New password has been sent to your email"
+    }
+  }
+  ```
+- **Error Response**:
+  ```json
+  {
+    "status": "error",
+    "errors": {
+      "detail": "No user found with this email and username combination"
+    }
+  }
+  ```
+
 ### 2. Thread APIs (`/api/threads/`)
 
 #### Get All Threads
