@@ -558,17 +558,19 @@ class ThreadViewSet(viewsets.ModelViewSet):
         content = serializer.validated_data.get('content', '')
         if check_toxic_content(content):
             # Create notification for the user who posted toxic content
+            # Limit content length to avoid database errors
+            display_content = content[:30] + "..." if len(content) > 30 else content
             Notification.objects.create(
                 user=self.request.user,
                 type="toxic_content",
-                content=f"Rejected content: '{content}'. Your post violates community standards and has been rejected.",
+                content=f"Your post with toxic content has been rejected.",
                 actioner=self.request.user
             )
             
             raise serializers.ValidationError({
                 'status': 'error',
                 'errors': {
-                    'content': f"Rejected content: '{content}'. Your post violates community standards and has been rejected."
+                    'content': f"Rejected content: '{display_content}'. Your post violates community standards and has been rejected."
                 }
             })
             
@@ -730,17 +732,19 @@ class CommentViewSet(viewsets.ModelViewSet):
         content = serializer.validated_data.get('content', '')
         if check_toxic_content(content):
             # Create notification for the user who posted toxic content
+            # Limit content length to avoid database errors
+            display_content = content[:30] + "..." if len(content) > 30 else content
             Notification.objects.create(
                 user=self.request.user,
                 type="toxic_content",
-                content=f"Rejected content: '{content}'. Your comment violates community standards and has been rejected.",
+                content=f"Your comment with toxic content has been rejected.",
                 actioner=self.request.user
             )
             
             raise serializers.ValidationError({
                 'status': 'error',
                 'errors': {
-                    'content': f"Rejected content: '{content}'. Your comment violates community standards and has been rejected."
+                    'content': f"Rejected content: '{display_content}'. Your comment violates community standards and has been rejected."
                 }
             })
             

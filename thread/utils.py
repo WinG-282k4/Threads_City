@@ -15,15 +15,17 @@ def create_thread_post(content, user):
     if check_toxic_content(content):
         # Create notification for the user who posted toxic content
         from .models import Notification
+        # Limit content length to avoid database errors
+        display_content = content[:30] + "..." if len(content) > 30 else content
         Notification.objects.create(
             user=user,
             type="toxic_content",
-            content=f"Rejected content: '{content}'. Your post violates community standards and has been rejected.",
+            content=f"Your post with toxic content has been rejected.",
             actioner=user
         )
         
         # Raise validation error
-        raise ValidationError(f"Rejected content: '{content}'. Your post violates community standards and has been rejected.")
+        raise ValidationError(f"Rejected content: '{display_content}'. Your post violates community standards and has been rejected.")
     
     thread = Thread(content=content)
     thread.user = user
@@ -42,15 +44,17 @@ def create_cmt(content, user, thread, parent_comment=None):
     if check_toxic_content(content):
         # Create notification for the user who posted toxic content
         from .models import Notification
+        # Limit content length to avoid database errors
+        display_content = content[:30] + "..." if len(content) > 30 else content
         Notification.objects.create(
             user=user,
             type="toxic_content",
-            content=f"Rejected content: '{content}'. Your comment violates community standards and has been rejected.",
+            content=f"Your comment with toxic content has been rejected.",
             actioner=user
         )
         
         # Raise validation error
-        raise ValidationError(f"Rejected content: '{content}'. Your comment violates community standards and has been rejected.")
+        raise ValidationError(f"Rejected content: '{display_content}'. Your comment violates community standards and has been rejected.")
     
     comment = Comment(content=content)
     comment.user = user
