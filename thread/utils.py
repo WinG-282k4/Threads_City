@@ -18,12 +18,12 @@ def create_thread_post(content, user):
         Notification.objects.create(
             user=user,
             type="toxic_content",
-            content=f"Bài viết của bạn vi phạm tiêu chuẩn cộng đồng và đã bị từ chối",
+            content=f"Rejected content: '{content}'. Your post violates community standards and has been rejected.",
             actioner=user
         )
         
         # Raise validation error
-        raise ValidationError("Bài viết của bạn vi phạm tiêu chuẩn cộng đồng")
+        raise ValidationError(f"Rejected content: '{content}'. Your post violates community standards and has been rejected.")
     
     thread = Thread(content=content)
     thread.user = user
@@ -45,12 +45,12 @@ def create_cmt(content, user, thread, parent_comment=None):
         Notification.objects.create(
             user=user,
             type="toxic_content",
-            content=f"Bình luận của bạn vi phạm tiêu chuẩn cộng đồng và đã bị từ chối",
+            content=f"Rejected content: '{content}'. Your comment violates community standards and has been rejected.",
             actioner=user
         )
         
         # Raise validation error
-        raise ValidationError("Bình luận của bạn vi phạm tiêu chuẩn cộng đồng")
+        raise ValidationError(f"Rejected content: '{content}'. Your comment violates community standards and has been rejected.")
     
     comment = Comment(content=content)
     comment.user = user
