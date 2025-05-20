@@ -561,14 +561,14 @@ class ThreadViewSet(viewsets.ModelViewSet):
             Notification.objects.create(
                 user=self.request.user,
                 type="toxic_content",
-                content=f"Bài viết của bạn vi phạm tiêu chuẩn cộng đồng và đã bị từ chối",
+                content=f"Rejected content: '{content}'. Your post violates community standards and has been rejected.",
                 actioner=self.request.user
             )
             
             raise serializers.ValidationError({
                 'status': 'error',
                 'errors': {
-                    'content': 'Bài viết của bạn vi phạm tiêu chuẩn cộng đồng'
+                    'content': f"Rejected content: '{content}'. Your post violates community standards and has been rejected."
                 }
             })
             
@@ -733,14 +733,14 @@ class CommentViewSet(viewsets.ModelViewSet):
             Notification.objects.create(
                 user=self.request.user,
                 type="toxic_content",
-                content=f"Bình luận của bạn vi phạm tiêu chuẩn cộng đồng và đã bị từ chối",
+                content=f"Rejected content: '{content}'. Your comment violates community standards and has been rejected.",
                 actioner=self.request.user
             )
             
             raise serializers.ValidationError({
                 'status': 'error',
                 'errors': {
-                    'content': 'Bình luận của bạn vi phạm tiêu chuẩn cộng đồng'
+                    'content': f"Rejected content: '{content}'. Your comment violates community standards and has been rejected."
                 }
             })
             
