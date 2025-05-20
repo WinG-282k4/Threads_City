@@ -16,11 +16,11 @@ def create_thread_post(content, user):
         # Create notification for the user who posted toxic content
         from .models import Notification
         # Limit content length to avoid database errors
-        display_content = content[:30] + "..." if len(content) > 30 else content
+        display_content = content[:15] + "..." if len(content) > 15 else content
         Notification.objects.create(
             user=user,
             type="toxic_content",
-            content=f"Rejected content: '{display_content}'. Your post violates community standards and has been rejected.",
+            content="Your post violates community standards and has been rejected.",
             actioner=user
         )
         
@@ -45,11 +45,11 @@ def create_cmt(content, user, thread, parent_comment=None):
         # Create notification for the user who posted toxic content
         from .models import Notification
         # Limit content length to avoid database errors
-        display_content = content[:30] + "..." if len(content) > 30 else content
+        display_content = content[:15] + "..." if len(content) > 15 else content
         Notification.objects.create(
             user=user,
             type="toxic_content",
-            content=f"Rejected content: '{display_content}'. Your comment violates community standards and has been rejected.",
+            content="Your comment violates community standards and has been rejected.",
             actioner=user
         )
         

@@ -559,11 +559,11 @@ class ThreadViewSet(viewsets.ModelViewSet):
         if check_toxic_content(content):
             # Create notification for the user who posted toxic content
             # Limit content length to avoid database errors
-            display_content = content[:30] + "..." if len(content) > 30 else content
+            display_content = content[:15] + "..." if len(content) > 15 else content
             Notification.objects.create(
                 user=self.request.user,
                 type="toxic_content",
-                content=f"Rejected content: '{display_content}'. Your post violates community standards and has been rejected.",
+                content="Your post violates community standards and has been rejected.",
                 actioner=self.request.user
             )
             
@@ -733,11 +733,11 @@ class CommentViewSet(viewsets.ModelViewSet):
         if check_toxic_content(content):
             # Create notification for the user who posted toxic content
             # Limit content length to avoid database errors
-            display_content = content[:30] + "..." if len(content) > 30 else content
+            display_content = content[:15] + "..." if len(content) > 15 else content
             Notification.objects.create(
                 user=self.request.user,
                 type="toxic_content",
-                content=f"Rejected content: '{display_content}'. Your comment violates community standards and has been rejected.",
+                content="Your comment violates community standards and has been rejected.",
                 actioner=self.request.user
             )
             
