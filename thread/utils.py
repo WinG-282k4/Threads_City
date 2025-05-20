@@ -20,12 +20,12 @@ def create_thread_post(content, user):
         Notification.objects.create(
             user=user,
             type="toxic_content",
-            content=f"Your post with toxic content has been rejected.",
+            content=f"Rejected content: '{display_content}'. Your post violates community standards and has been rejected.",
             actioner=user
         )
         
         # Raise validation error
-        raise ValidationError(f"Rejected content: '{display_content}'. Your post violates community standards and has been rejected.")
+        raise ValidationError(f"Your post with toxic content has been rejected.")
     
     thread = Thread(content=content)
     thread.user = user
@@ -49,12 +49,12 @@ def create_cmt(content, user, thread, parent_comment=None):
         Notification.objects.create(
             user=user,
             type="toxic_content",
-            content=f"Your comment with toxic content has been rejected.",
+            content=f"Rejected content: '{display_content}'. Your comment violates community standards and has been rejected.",
             actioner=user
         )
         
         # Raise validation error
-        raise ValidationError(f"Rejected content: '{display_content}'. Your comment violates community standards and has been rejected.")
+        raise ValidationError(f"Your comment with toxic content has been rejected.")
     
     comment = Comment(content=content)
     comment.user = user

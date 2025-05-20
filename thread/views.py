@@ -563,14 +563,14 @@ class ThreadViewSet(viewsets.ModelViewSet):
             Notification.objects.create(
                 user=self.request.user,
                 type="toxic_content",
-                content=f"Your post with toxic content has been rejected.",
+                content=f"Rejected content: '{display_content}'. Your post violates community standards and has been rejected.",
                 actioner=self.request.user
             )
             
             raise serializers.ValidationError({
                 'status': 'error',
                 'errors': {
-                    'content': f"Rejected content: '{display_content}'. Your post violates community standards and has been rejected."
+                    'content': f"Your post with toxic content has been rejected."
                 }
             })
             
@@ -737,14 +737,14 @@ class CommentViewSet(viewsets.ModelViewSet):
             Notification.objects.create(
                 user=self.request.user,
                 type="toxic_content",
-                content=f"Your comment with toxic content has been rejected.",
+                content=f"Rejected content: '{display_content}'. Your comment violates community standards and has been rejected.",
                 actioner=self.request.user
             )
             
             raise serializers.ValidationError({
                 'status': 'error',
                 'errors': {
-                    'content': f"Rejected content: '{display_content}'. Your comment violates community standards and has been rejected."
+                    'content': f"Your comment with toxic content has been rejected."
                 }
             })
             
