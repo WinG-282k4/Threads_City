@@ -737,6 +737,33 @@ When toxic content is detected, a notification is sent to the user who attempted
   }
   ```
 
+#### Get Following of a User
+
+- **Endpoint**: `GET /api/follows/following/?user_id={user_id}&page=1`
+- **Authentication**: Required
+- **Query Params**:
+  - `user_id`: ID của user muốn lấy danh sách following
+  - `page`: Số trang (pagination)
+- **Response**:
+  ```json
+  {
+    "count": 10,
+    "next": "http://api.example.org/follows/following/?user_id=2&page=2",
+    "previous": null,
+    "results": [
+      {
+        "id": 1,
+        "username": "username",
+        "first_name": "First",
+        "last_name": "Last",
+        "email": "email@example.com",
+        "avatar": "url_to_avatar_image",
+        "is_followed": false
+      }
+    ]
+  }
+  ```
+
 #### Follow/Unfollow User
 
 - **Endpoint**: `POST /api/follows/`
@@ -881,10 +908,6 @@ When toxic content is detected, a notification is sent to the user who attempted
   }
   ```
 
-```
-
-```
-
 #### Get Unread Notification Count
 
 - **Endpoint**: `GET /api/notifications/unread_count/`
@@ -895,10 +918,6 @@ When toxic content is detected, a notification is sent to the user who attempted
     "count": 5
   }
   ```
-
-```
-
-```
 
 #### Mark Notification as Read
 
@@ -912,10 +931,6 @@ When toxic content is detected, a notification is sent to the user who attempted
   }
   ```
 
-```
-
-```
-
 #### Mark All Notifications as Read
 
 - **Endpoint**: `POST /api/notifications/mark_all_read/`
@@ -926,10 +941,6 @@ When toxic content is detected, a notification is sent to the user who attempted
     "message": "All notifications marked as read"
   }
   ```
-
-```
-
-```
 
 #### Get Unread Notifications
 
@@ -1074,122 +1085,5 @@ const threadChannel = pusher.subscribe(`thread_${threadId}`);
 // Listen for like updates
 threadChannel.bind("like_update", function (data) {
   // Update UI with new like count
-  console.log(`Thread ${data.thread_id} now has ${data.likes_count} likes`);
-});
-
-// Subscribe to user notifications
-const userChannel = pusher.subscribe(`user_${userId}`);
-
-// Listen for new notifications
-userChannel.bind("notification_update", function (data) {
-  // Update UI with new notification
-  console.log(`New notification: ${data.content}`);
-});
-```
-
-##### Django Channels (JavaScript WebSocket Example)
-
-```javascript
-// Connect to thread WebSocket
-const threadSocket = new WebSocket(
-  `ws://localhost:8000/ws/thread/${threadId}/`
-);
-
-// Handle messages
-threadSocket.onmessage = function (e) {
-  const data = JSON.parse(e.data);
-
-  if (data.type === "like_update") {
-    // Update UI with new like count
-    console.log(`Thread ${data.thread_id} now has ${data.likes_count} likes`);
-  } else if (data.type === "comment_update") {
-    // Handle comment updates
-    console.log(`New comment on thread ${data.thread_id}`);
-  }
-};
-
-// Connect to user notification WebSocket
-const userSocket = new WebSocket(`ws://localhost:8000/ws/user/${userId}/`);
-
-// Handle notifications
-userSocket.onmessage = function (e) {
-  const data = JSON.parse(e.data);
-
-  if (data.type === "notification_update") {
-    // Update UI with new notification
-    console.log(`New notification: ${data.content}`);
-  }
-};
-```
-
-### Authentication & Headers
-
-All APIs (except registration and login) require authentication. Required headers:
-
-```
-Content-Type: application/json
-Accept: application/json
-Authorization: Bearer <access_token>  # For JWT authentication
-```
-
-Authentication methods supported:
-
-- JWT Authentication (Bearer token)
-- Session Authentication
-- Basic Authentication
-
-#### JWT Authentication
-
-- Access Token: Valid for 60 minutes
-- Refresh Token: Valid for 1 day
-- Login response includes both tokens:
-  ```json
-  {
-    "user": {
-      "id": 1,
-      "username": "username",
-      "email": "user@example.com",
-      "first_name": "John",
-      "last_name": "Doe"
-    },
-    "tokens": {
-      "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
-      "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
-    }
-  }
-  ```
-
-### Pagination
-
-- Default: 10 items per page
-- Query parameter: `?page=1`
-
-### Error Responses
-
-```json
-{
-  "detail": "Error message here"
-}
-```
-
-Status codes:
-
-- 400: Bad Request
-- 401: Unauthorized
-- 403: Forbidden
-- 404: Not Found
-- 500: Server Error
-
-## Development Setup
-
-1. Clone the repository
-2. Create virtual environment
-3. Install dependencies: `pip install -r requirements.txt`
-4. Create config.py with required settings
-5. Run migrations: `python manage.py migrate`
-6. Create superuser: `python manage.py createsuperuser`
-7. Run server: `python manage.py runserver`
-
-```
-
+  console.log(`
 ```

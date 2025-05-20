@@ -781,6 +781,24 @@ class FollowViewSet(viewsets.ModelViewSet):
         serializer.save(follower=self.request.user)
 
     @action(detail=False, methods=['get'])
+    def following(self, request):
+        from accounts.serializers import UserSerializer
+        user_id = request.query_params.get('user_id')
+        if not user_id:
+            return Response({'error': 'user_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        queryset = User.objects.filter(followers__follower=user).distinct()
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = UserSerializer(page, many=True, context={'request': request})
+            return self.get_paginated_response(serializer.data)
+        serializer = UserSerializer(queryset, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
     def followers_count(self, request):
         count = Follow.objects.filter(followed=request.user).count()
         return Response({'count': count})
