@@ -107,6 +107,14 @@ def notify_like_thread(sender, instance, created, **kwargs):
     )
 
 @receiver(post_delete, sender=Like)
+def decrement_thread_likes(sender, instance, **kwargs):
+    """Decrement the thread's likes_count when a Like is deleted"""
+    thread = instance.thread
+    if thread.likes_count > 0:  # Tránh giá trị âm
+        thread.likes_count -= 1
+        thread.save(update_fields=['likes_count'])
+
+@receiver(post_delete, sender=Like)
 def notify_unlike_thread(sender, instance, **kwargs):
     thread = instance.thread
     try:
