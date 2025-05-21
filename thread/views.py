@@ -752,7 +752,9 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def like(self, request, thread_pk=None, pk=None):
-        comment = self.get_object()
+        # Look up comment by ID regardless of parent_comment status
+        comment = get_object_or_404(Comment, id=pk)
+        
         like, created = LikeComment.objects.get_or_create(comment=comment, user=request.user)
         if not created:
             like.delete()
