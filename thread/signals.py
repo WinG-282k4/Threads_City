@@ -160,17 +160,47 @@ def notify_like_comment(sender, instance, created, **kwargs):
         comment.refresh_from_db()
     except Exception:
         pass
+    
+    # Create standardized user info object
+    user_info = {
+        'id': instance.user.id,
+        'username': instance.user.username,
+        'avatar': instance.user.profile.avatar.url if hasattr(instance.user, 'profile') and instance.user.profile.avatar else None
+    }
+    
+    # Enhanced message content with information about reply status
+    like_update_content = {
+        'type': 'comment_like_update',
+        'thread_id': comment.thread.id,
+        'comment_id': comment.id,
+        'likes_count': comment.likes_count,
+        'action': 'like' if created else 'unlike',
+        'is_reply': comment.parent_comment is not None,
+        'user_info': user_info,
+        'created_at': instance.created_at.isoformat() if hasattr(instance, 'created_at') else None
+    }
+    
+    # Add parent_comment_id if this is a reply
+    if comment.parent_comment:
+        like_update_content['parent_comment_id'] = comment.parent_comment.id
+        
+        # Also send to parent comment channel
+        reply_like_message = like_update_content.copy()
+        reply_like_message['type'] = 'reply_comment_like_update'
+        
+        channel_group_send(
+            f'comment_{comment.parent_comment.id}',
+            {
+                'type': 'like_update',
+                'content': reply_like_message
+            }
+        )
+    
     channel_group_send(
         f'thread_{comment.thread.id}',
         {
             'type': 'like_update',
-            'content': {
-                'type': 'comment_like_update',
-                'thread_id': comment.thread.id,
-                'comment_id': comment.id,
-                'likes_count': comment.likes_count,
-                'action': 'like' if created else 'unlike'
-            }
+            'content': like_update_content
         }
     )
 
@@ -189,17 +219,47 @@ def notify_unlike_comment(sender, instance, **kwargs):
         comment.refresh_from_db()
     except Exception:
         pass
+    
+    # Create standardized user info object
+    user_info = {
+        'id': instance.user.id,
+        'username': instance.user.username,
+        'avatar': instance.user.profile.avatar.url if hasattr(instance.user, 'profile') and instance.user.profile.avatar else None
+    }
+    
+    # Enhanced message content with information about reply status
+    like_update_content = {
+        'type': 'comment_like_update',
+        'thread_id': comment.thread.id,
+        'comment_id': comment.id,
+        'likes_count': comment.likes_count,
+        'action': 'unlike',
+        'is_reply': comment.parent_comment is not None,
+        'user_info': user_info,
+        'created_at': instance.created_at.isoformat() if hasattr(instance, 'created_at') else None
+    }
+    
+    # Add parent_comment_id if this is a reply
+    if comment.parent_comment:
+        like_update_content['parent_comment_id'] = comment.parent_comment.id
+        
+        # Also send to parent comment channel
+        reply_like_message = like_update_content.copy()
+        reply_like_message['type'] = 'reply_comment_like_update'
+        
+        channel_group_send(
+            f'comment_{comment.parent_comment.id}',
+            {
+                'type': 'like_update',
+                'content': reply_like_message
+            }
+        )
+    
     channel_group_send(
         f'thread_{comment.thread.id}',
         {
             'type': 'like_update',
-            'content': {
-                'type': 'comment_like_update',
-                'thread_id': comment.thread.id,
-                'comment_id': comment.id,
-                'likes_count': comment.likes_count,
-                'action': 'unlike'
-            }
+            'content': like_update_content
         }
     )
 
@@ -336,22 +396,28 @@ def create_notification_comment(sender, instance, created, **kwargs):
             pass
         comment_count = instance.thread.comment_count
         
-    # Send WebSocket/Pusher update for comment creation
+    # Create standardized user info object
+    user_info = {
+        'id': instance.user.id,
+        'username': instance.user.username,
+        'avatar': instance.user.profile.avatar.url if hasattr(instance.user, 'profile') and instance.user.profile.avatar else None
+    }
+    
+    # Create standardized message content
     message_content = {
-        'type': 'new_comment',
+        'type': 'reply_comment' if instance.parent_comment else 'new_comment',
         'thread_id': instance.thread.id,
         'comment_id': instance.id,
         'content': instance.content,
         'comment_count': comment_count,
         'is_reply': instance.parent_comment is not None,
         'parent_comment_id': instance.parent_comment.id if instance.parent_comment else None,
-        'user_info': {
-            'id': instance.user.id,
-            'username': instance.user.username,
-            'avatar': instance.user.profile.avatar.url if hasattr(instance.user, 'profile') and instance.user.profile.avatar else None
-        }
+        'user_info': user_info,
+        'created_at': instance.created_at.isoformat() if hasattr(instance, 'created_at') else None,
+        'likes_count': instance.likes_count
     }
     
+    # Send to thread channel
     channel_group_send(
         f'thread_{instance.thread.id}',
         {
@@ -360,6 +426,20 @@ def create_notification_comment(sender, instance, created, **kwargs):
         }
     )
     
+    # If this is a reply, also send to the parent comment channel with consistent structure
+    if instance.parent_comment:
+        reply_message = message_content.copy()
+        reply_message['type'] = 'new_reply'
+        
+        channel_group_send(
+            f'comment_{instance.parent_comment.id}',
+            {
+                'type': 'comment_update',
+                'content': reply_message
+            }
+        )
+    
+    # Notification to comment owner or thread owner
     if instance.parent_comment:
         if not instance.parent_comment.user == instance.user:
             notification = Notification.objects.create(
