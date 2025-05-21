@@ -175,6 +175,14 @@ def notify_like_comment(sender, instance, created, **kwargs):
     )
 
 @receiver(post_delete, sender=LikeComment)
+def decrement_comment_likes(sender, instance, **kwargs):
+    """Decrement the comment's likes_count when a LikeComment is deleted"""
+    comment = instance.comment
+    if comment.likes_count > 0:  # Tránh giá trị âm
+        comment.likes_count -= 1
+        comment.save(update_fields=['likes_count'])
+
+@receiver(post_delete, sender=LikeComment)
 def notify_unlike_comment(sender, instance, **kwargs):
     comment = instance.comment
     try:
